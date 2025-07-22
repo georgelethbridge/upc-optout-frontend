@@ -23,17 +23,18 @@ function extractFromSpreadsheet(file) {
       alert('The spreadsheet is missing a recognizable header row. Make sure the first row contains: EP Pub Number, Owner 1 Name, Owner 1 Address');
       return;
     }
-    if (!rows.length || !Array.isArray(rows[0])) {
-      console.error('Spreadsheet is empty or headers are malformed');
-      alert('The spreadsheet is missing a recognizable header row.');
-      return;
-    }
     const headers = rows[0].map(h => (h || '').toString().toLowerCase().trim());
     console.log('Detected headers:', headers);
 
     const epIndex = headers.findIndex(h => h.includes('ep pub'));
     const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
     const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
+
+    if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
+      console.warn('One or more required headers were not found.');
+      alert('Could not find one of the expected headers: EP Pub Number, Owner 1 Name, Owner 1 Address. Please check your spreadsheet.');
+      return;
+    }
 
     if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
       console.warn('One or more required headers were not found.');
