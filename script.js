@@ -64,17 +64,26 @@ function extractFromSpreadsheet(file) {
 
     const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
     const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
-    const addressParts = addressFull.split(',').map(part => part.trim());
-    applicantInfo = {
-      isNaturalPerson: document.getElementById('person-type').value === 'true',
-      name,
-      address: {
-        address: addressParts[0] || '',
-        city: addressParts[1] || '',
-        zipCode: addressParts[2] || '',
-        state: addressParts[3] || ''
-      }
-    };
+    fetch('https://your-backend.onrender.com/parse-address', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: addressFull })
+    })
+    .then(res => res.json())
+    .then(parsed => {
+        applicantInfo = {
+        isNaturalPerson: document.getElementById('person-type').value === 'true',
+        name,
+        address: parsed
+        };
+        updateApplicantDisplay();
+        updatePreview();
+    })
+    .catch(err => {
+        console.error('Address parsing failed:', err);
+        alert('Could not parse address. Please review the format or try manually.');
+    });
+
 
     updateApplicantDisplay();
     updatePreview();
