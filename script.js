@@ -23,7 +23,21 @@ function extractFromSpreadsheet(file) {
       alert('The spreadsheet is missing a recognizable header row. Make sure the first row contains: EP Pub Number, Owner 1 Name, Owner 1 Address');
       return;
     }
-    const headers = rows[0].map(h => (h ?? '').toString().toLowerCase().trim());
+    let headerRowIndex = -1;
+    let headers = [];
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const candidate = rows[i].map(h => (h ?? '').toString().toLowerCase().trim());
+      if (candidate.some(h => h.includes('ep pub'))) {
+        headers = candidate;
+        headerRowIndex = i;
+        break;
+      }
+    }
+    if (headerRowIndex === -1) {
+      console.error('Could not find a valid header row.');
+      alert('Could not find a row with EP Pub Number. Please check your spreadsheet.');
+      return;
+    }
     console.log('Detected headers:', headers);
 
     const epIndex = headers.findIndex(h => h.includes('ep pub'));
@@ -41,7 +55,7 @@ function extractFromSpreadsheet(file) {
     }
     
 
-    extractedEPs = rows.slice(1)
+    extractedEPs = rows.slice(headerRowIndex + 1)
       .map(row => row[epIndex])
       .filter(ep => ep && ep.toString().startsWith('EP'))
       .map(ep => ep.toString().trim());
@@ -50,8 +64,8 @@ function extractFromSpreadsheet(file) {
       ? `<li>${extractedEPs.join('</li><li>')}</li>`
       : '<li>No EP Publication Numbers found</li>';
 
-    const name = rows[1][nameIndex]?.trim();
-    const addressFull = rows[1][addrIndex]?.trim();
+    const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
+    const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
     const addressParts = addressFull.split(',').map(part => part.trim());
     applicantInfo = {
       isNaturalPerson: document.getElementById('person-type').value === 'true',
