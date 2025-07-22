@@ -16,25 +16,35 @@
     </section>
 
     <section>
-      <label for="spreadsheet">Drop Spreadsheet (.xlsx) Here or Click to Upload</label>
+      <label>Drop Spreadsheet (.xlsx) Below</label>
+      <div id="spreadsheet-drop" class="drop-zone">Drop spreadsheet here</div>
       <input type="file" id="spreadsheet" accept=".xlsx" />
-      <div id="drop-area">Drop your spreadsheet here</div>
       <ul id="ep-list"></ul>
     </section>
 
     <section>
-      <label for="application_pdf">Application PDF (signed):</label>
+      <label>Drop Application PDF (Signed)</label>
+      <div id="application-drop" class="drop-zone">Drop signed application PDF here</div>
       <input type="file" id="application_pdf" accept="application/pdf" required />
     </section>
 
     <section>
-      <label for="mandate_pdf">Mandate PDF (if needed):</label>
+      <label>Drop Mandate PDF (if applicable)</label>
+      <div id="mandate-drop" class="drop-zone">Drop mandate PDF here</div>
       <input type="file" id="mandate_pdf" accept="application/pdf" />
     </section>
 
     <section>
-      <label for="applicant_json">Applicant JSON:</label>
-      <textarea id="applicant_json" placeholder='{"isNaturalPerson":false,...}'></textarea>
+      <label for="person-type">Applicant Type:</label>
+      <select id="person-type">
+        <option value="false">Legal Entity</option>
+        <option value="true">Natural Person</option>
+      </select>
+    </section>
+
+    <section>
+      <label>Applicant Info (from spreadsheet):</label>
+      <div id="applicant-summary" class="applicant-summary"></div>
     </section>
 
     <section>

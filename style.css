@@ -22,12 +22,15 @@ label {
 }
 
 input[type="text"],
-textarea,
-input[type="file"] {
+textarea {
   width: 100%;
   padding: 0.5rem;
   font-size: 1rem;
   box-sizing: border-box;
+}
+
+input[type="file"] {
+  display: none;
 }
 
 textarea {
@@ -35,7 +38,7 @@ textarea {
   font-family: monospace;
 }
 
-#drop-area {
+.drop-zone {
   border: 2px dashed #aaa;
   padding: 1rem;
   text-align: center;
@@ -45,7 +48,7 @@ textarea {
   margin-top: 0.5rem;
 }
 
-#drop-area.hover {
+.drop-zone.hover {
   border-color: #333;
   background: #eee;
 }
@@ -83,4 +86,13 @@ button#submit:hover {
   margin-top: 1rem;
   font-family: monospace;
   color: #333;
+}
+
+.applicant-summary {
+  background: #eef5ff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-family: sans-serif;
+  line-height: 1.4;
 }

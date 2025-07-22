@@ -1,93 +1,143 @@
 // script.js
-const dropArea = document.getElementById('drop-area');
-const spreadsheetInput = document.getElementById('spreadsheet');
 const epList = document.getElementById('ep-list');
 const preview = document.getElementById('preview');
 const result = document.getElementById('result');
+const applicantSummary = document.getElementById('applicant-summary');
 const submitButton = document.getElementById('submit');
 
 let extractedEPs = [];
+let applicationPDF = null;
+let mandatePDF = null;
+let applicantInfo = {};
 
-function handleFile(file) {
+function extractFromSpreadsheet(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    const headerRow = rows[0];
-    const epIndex = headerRow.findIndex(h => h.toLowerCase().includes('ep publication'));
-    const refIndex = headerRow.findIndex(h => h.toLowerCase().includes('internal reference'));
+    const headers = rows[0].map(h => h.toLowerCase());
+    const epIndex = headers.findIndex(h => h.includes('ep pub'));
+    const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
+    const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
 
     extractedEPs = rows.slice(1)
-      .map(row => ({
-        ep: row[epIndex]?.toString().trim(),
-        ref: row[refIndex]?.toString().trim() || ''
-      }))
-      .filter(entry => entry.ep && entry.ep.startsWith('EP'));
+      .map(row => row[epIndex])
+      .filter(ep => ep && ep.toString().startsWith('EP'))
+      .map(ep => ep.toString().trim());
 
-    epList.innerHTML = extractedEPs.map(e => `<li>${e.ep}${e.ref ? ' — ' + e.ref : ''}</li>`).join('');
+    const name = rows[1][nameIndex]?.trim();
+    const addressFull = rows[1][addrIndex]?.trim();
+    const addressParts = addressFull.split(',').map(part => part.trim());
+    applicantInfo = {
+      isNaturalPerson: document.getElementById('person-type').value === 'true',
+      name,
+      address: {
+        address: addressParts[0] || '',
+        city: addressParts[1] || '',
+        zipCode: addressParts[2] || '',
+        state: addressParts[3] || 'DE'
+      }
+    };
+
+    updateApplicantDisplay();
     updatePreview();
   };
   reader.readAsArrayBuffer(file);
 }
 
-spreadsheetInput.addEventListener('change', e => {
-  if (e.target.files[0]) handleFile(e.target.files[0]);
-});
+function updateApplicantDisplay() {
+  const html = `
+    <strong>Name:</strong> ${applicantInfo.name}<br>
+    <strong>Type:</strong> ${applicantInfo.isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
+    <strong>Address:</strong><br>
+    ${applicantInfo.address.address}<br>
+    ${applicantInfo.address.city} ${applicantInfo.address.zipCode}<br>
+    ${applicantInfo.address.state}
+  `;
+  applicantSummary.innerHTML = html;
+}
 
-dropArea.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropArea.classList.add('hover');
-});
-
-dropArea.addEventListener('dragleave', () => {
-  dropArea.classList.remove('hover');
-});
-
-dropArea.addEventListener('drop', e => {
-  e.preventDefault();
-  dropArea.classList.remove('hover');
-  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+document.getElementById('person-type').addEventListener('change', () => {
+  applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
+  updateApplicantDisplay();
+  updatePreview();
 });
 
 function updatePreview() {
   const initials = document.getElementById('initials').value.trim();
-  const applicant = document.getElementById('applicant_json').value;
   const mandator = document.getElementById('mandator_json').value;
 
-  const previewData = extractedEPs.map(entry => ({
+  const payloads = extractedEPs.map(ep => ({
     initials,
-    ep_number: entry.ep,
-    internalReference: entry.ref,
-    applicant,
-    mandator
+    ep_number: ep,
+    applicant: applicantInfo,
+    mandator: mandator ? JSON.parse(mandator) : undefined
   }));
-  preview.textContent = JSON.stringify(previewData, null, 2);
+  preview.textContent = JSON.stringify(payloads, null, 2);
 }
 
 document.getElementById('initials').addEventListener('input', updatePreview);
-document.getElementById('applicant_json').addEventListener('input', updatePreview);
 document.getElementById('mandator_json').addEventListener('input', updatePreview);
 
-submitButton.addEventListener('click', async () => {
-  const applicationPDF = document.getElementById('application_pdf').files[0];
-  const mandatePDF = document.getElementById('mandate_pdf').files[0];
-  const applicant = document.getElementById('applicant_json').value;
-  const mandator = document.getElementById('mandator_json').value;
-  const initials = document.getElementById('initials').value.trim();
+function handleDrop(zoneId, callback) {
+  const zone = document.getElementById(zoneId);
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('hover');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('hover');
+    const file = e.dataTransfer.files[0];
+    callback(file);
+  });
+}
 
-  if (!applicationPDF || !initials || !applicant) {
-    alert('Initials, applicant and application PDF are required.');
+handleDrop('spreadsheet-drop', file => extractFromSpreadsheet(file));
+handleDrop('application-drop', file => applicationPDF = file);
+handleDrop('mandate-drop', file => mandatePDF = file);
+
+document.getElementById('spreadsheet').addEventListener('change', e => {
+  if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
+});
+
+document.getElementById('application_pdf').addEventListener('change', e => {
+  applicationPDF = e.target.files[0];
+});
+
+document.getElementById('mandate_pdf').addEventListener('change', e => {
+  mandatePDF = e.target.files[0];
+});
+
+submitButton.addEventListener('click', async () => {
+  const initials = document.getElementById('initials').value.trim();
+  const mandator = document.getElementById('mandator_json').value;
+
+  if (!applicationPDF || !initials || !applicantInfo.name) {
+    alert('Initials, applicant info and application PDF are required.');
     return;
   }
 
-  for (const { ep, ref } of extractedEPs) {
+  for (const ep of extractedEPs) {
     const formData = new FormData();
     formData.append('initials', initials);
     formData.append('ep_number', ep);
-    formData.append('internalReference', ref);
-    formData.append('applicant', applicant);
+    formData.append('applicant', JSON.stringify({
+      isNaturalPerson: applicantInfo.isNaturalPerson,
+      contactAddress: applicantInfo.address,
+      email: 'placeholder@example.com',
+      naturalPersonDetails: applicantInfo.isNaturalPerson ? {
+        firstName: applicantInfo.name.split(' ')[0] || 'First',
+        lastName: applicantInfo.name.split(' ').slice(1).join(' ') || 'Last'
+      } : undefined,
+      legalEntityDetails: !applicantInfo.isNaturalPerson ? {
+        name: applicantInfo.name,
+        placeOfBusiness: applicantInfo.address.state
+      } : undefined
+    }));
     if (mandator) formData.append('mandator', mandator);
     formData.append('application_pdf', applicationPDF);
     if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
