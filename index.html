@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UPC Opt-Out Filing</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>UPC Opt-Out Filing Tool</h1>
+
+    <section>
+      <label for="initials">Filing User Initials:</label>
+      <input type="text" id="initials" placeholder="e.g., GL" required />
+    </section>
+
+    <section>
+      <label for="spreadsheet">Drop Spreadsheet (.xlsx) Here or Click to Upload</label>
+      <input type="file" id="spreadsheet" accept=".xlsx" />
+      <div id="drop-area">Drop your spreadsheet here</div>
+      <ul id="ep-list"></ul>
+    </section>
+
+    <section>
+      <label for="application_pdf">Application PDF (signed):</label>
+      <input type="file" id="application_pdf" accept="application/pdf" required />
+    </section>
+
+    <section>
+      <label for="mandate_pdf">Mandate PDF (if needed):</label>
+      <input type="file" id="mandate_pdf" accept="application/pdf" />
+    </section>
+
+    <section>
+      <label for="applicant_json">Applicant JSON:</label>
+      <textarea id="applicant_json" placeholder='{"isNaturalPerson":false,...}'></textarea>
+    </section>
+
+    <section>
+      <label for="mandator_json">Mandator JSON (if needed):</label>
+      <textarea id="mandator_json"></textarea>
+    </section>
+
+    <section>
+      <label for="preview">Preview JSON Payload:</label>
+      <pre id="preview"></pre>
+    </section>
+
+    <button id="submit">Submit Opt-Out Request(s)</button>
+    <div id="result"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
