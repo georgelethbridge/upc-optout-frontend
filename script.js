@@ -64,7 +64,7 @@ function extractFromSpreadsheet(file) {
 
     const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
     const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
-    fetch('https://your-backend.onrender.com/parse-address', {
+    fetch('https://upc-optout-backend.onrender.com/parse-address', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ address: addressFull })
