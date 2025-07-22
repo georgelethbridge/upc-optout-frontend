@@ -40,10 +40,9 @@ function extractFromSpreadsheet(file) {
     }
     console.log('Detected headers:', headers);
 
-    const epIndex = headers.findIndex(h => h.includes('ep pub'));
-    const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
-    const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
-
+    const epIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('ep pub'));
+    const nameIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 name'));
+    const addrIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 address'));
     
 
     
