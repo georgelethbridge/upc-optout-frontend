@@ -55,9 +55,8 @@ function extractFromSpreadsheet(file) {
     
 
     extractedEPs = rows.slice(headerRowIndex + 1)
-      .map(row => row[epIndex])
-      .filter(ep => ep && ep.toString().startsWith('EP'))
-      .map(ep => ep.toString().trim());
+      .map(row => (row[epIndex] ?? '').toString().trim())
+      .filter(ep => ep.startsWith('EP'));
 
     epList.innerHTML = extractedEPs.length
       ? `<li>${extractedEPs.join('</li><li>')}</li>`
