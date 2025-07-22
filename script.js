@@ -72,7 +72,7 @@ function extractFromSpreadsheet(file) {
         address: addressParts[0] || '',
         city: addressParts[1] || '',
         zipCode: addressParts[2] || '',
-        state: addressParts[3] || 'DE'
+        state: addressParts[3] || ''
       }
     };
 
