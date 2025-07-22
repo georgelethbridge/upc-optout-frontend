@@ -23,7 +23,7 @@ function extractFromSpreadsheet(file) {
       alert('The spreadsheet is missing a recognizable header row. Make sure the first row contains: EP Pub Number, Owner 1 Name, Owner 1 Address');
       return;
     }
-    const headers = rows[0].map(h => (h || '').toString().toLowerCase().trim());
+    const headers = rows[0].map(h => (h ?? '').toString().toLowerCase().trim());
     console.log('Detected headers:', headers);
 
     const epIndex = headers.findIndex(h => h.includes('ep pub'));
@@ -160,4 +160,3 @@ submitButton.addEventListener('click', async () => {
     result.innerHTML += `<p>${status} ${ep}: ${resJson.requestId || resJson.error}</p>`;
   }
 });
-
