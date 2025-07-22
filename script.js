@@ -27,7 +27,7 @@ function extractFromSpreadsheet(file) {
     let headers = [];
     for (let i = 0; i < Math.min(10, rows.length); i++) {
       const candidate = rows[i].map(h => (h ?? '').toString().toLowerCase().trim());
-      if (candidate.some(h => h.includes('ep pub'))) {
+      if (candidate.some(h => (h || '').toString().toLowerCase().includes('ep pub'))) {
         headers = candidate;
         headerRowIndex = i;
         break;
