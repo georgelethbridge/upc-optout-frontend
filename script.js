@@ -26,9 +26,7 @@ function extractFromSpreadsheet(file) {
     const headers = rows[0].map(h => (h || '').toString().toLowerCase().trim());
     console.log('Detected headers:', headers);
 
-    const epIndex = headers.findIndex(h => h.includes('ep pub'));
-    const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
-    const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
+    // duplicate index declarations removed
 
     if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
       console.warn('One or more required headers were not found.');
