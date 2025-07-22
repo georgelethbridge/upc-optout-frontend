@@ -17,7 +17,12 @@ function extractFromSpreadsheet(file) {
     const workbook = XLSX.read(data, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    const headers = rows[0].map(h => h.toLowerCase());
+    if (!rows.length || !Array.isArray(rows[0])) {
+      console.error('Spreadsheet is empty or headers are malformed');
+      alert('The spreadsheet is missing a recognizable header row.');
+      return;
+    }
+    const headers = rows[0].map(h => (h || '').toString().toLowerCase());
     const epIndex = headers.findIndex(h => h.includes('ep pub'));
     const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
     const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
