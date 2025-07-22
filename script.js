@@ -81,37 +81,17 @@ function updatePreview() {
 document.getElementById('initials').addEventListener('input', updatePreview);
 document.getElementById('mandator_json').addEventListener('input', updatePreview);
 
-function setupDropZone(zoneId, fileInputId, onFileSelected) {
-  const zone = document.getElementById(zoneId);
-  const input = document.getElementById(fileInputId);
+document.getElementById('spreadsheet').addEventListener('change', e => {
+  if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
+});
 
-  zone.addEventListener('click', () => input.click());
+document.getElementById('application_pdf').addEventListener('change', e => {
+  applicationPDF = e.target.files[0];
+});
 
-  zone.addEventListener('dragover', e => {
-    e.preventDefault();
-    zone.classList.add('hover');
-  });
-  zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('hover');
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      input.files = e.dataTransfer.files;
-      onFileSelected(file);
-    }
-  });
-
-  input.addEventListener('change', e => {
-    if (e.target.files[0]) {
-      onFileSelected(e.target.files[0]);
-    }
-  });
-}
-
-setupDropZone('spreadsheet-drop', 'spreadsheet', extractFromSpreadsheet);
-setupDropZone('application-drop', 'application_pdf', file => applicationPDF = file);
-setupDropZone('mandate-drop', 'mandate_pdf', file => mandatePDF = file);
+document.getElementById('mandate_pdf').addEventListener('change', e => {
+  mandatePDF = e.target.files[0];
+});
 
 submitButton.addEventListener('click', async () => {
   const initials = document.getElementById('initials').value.trim();
