@@ -27,6 +27,10 @@ function extractFromSpreadsheet(file) {
       .filter(ep => ep && ep.toString().startsWith('EP'))
       .map(ep => ep.toString().trim());
 
+    epList.innerHTML = extractedEPs.length
+      ? `<li>${extractedEPs.join('</li><li>')}</li>`
+      : '<li>No EP Publication Numbers found</li>';
+
     const name = rows[1][nameIndex]?.trim();
     const addressFull = rows[1][addrIndex]?.trim();
     const addressParts = addressFull.split(',').map(part => part.trim());
@@ -48,14 +52,14 @@ function extractFromSpreadsheet(file) {
 }
 
 function updateApplicantDisplay() {
-  const html = `
+  const html = applicantInfo.name ? `
     <strong>Name:</strong> ${applicantInfo.name}<br>
     <strong>Type:</strong> ${applicantInfo.isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
     <strong>Address:</strong><br>
     ${applicantInfo.address.address}<br>
     ${applicantInfo.address.city} ${applicantInfo.address.zipCode}<br>
     ${applicantInfo.address.state}
-  `;
+  ` : '<em>No applicant data found</em>';
   applicantSummary.innerHTML = html;
 }
 
