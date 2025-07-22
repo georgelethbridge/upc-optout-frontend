@@ -1,135 +1,80 @@
-// script.js
-const epList = document.getElementById('ep-list');
-const preview = document.getElementById('preview');
-const result = document.getElementById('result');
-const applicantSummary = document.getElementById('applicant-summary');
-const submitButton = document.getElementById('submit');
-
-let extractedEPs = [];
-let applicationPDF = null;
-let mandatePDF = null;
-let applicantInfo = {};
-
-function extractFromSpreadsheet(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    const headers = rows[0].map(h => h.toLowerCase());
-    const epIndex = headers.findIndex(h => h.includes('ep pub'));
-    const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
-    const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
-
-    extractedEPs = rows.slice(1)
-      .map(row => row[epIndex])
-      .filter(ep => ep && ep.toString().startsWith('EP'))
-      .map(ep => ep.toString().trim());
-
-    const name = rows[1][nameIndex]?.trim();
-    const addressFull = rows[1][addrIndex]?.trim();
-    const addressParts = addressFull.split(',').map(part => part.trim());
-    applicantInfo = {
-      isNaturalPerson: document.getElementById('person-type').value === 'true',
-      name,
-      address: {
-        address: addressParts[0] || '',
-        city: addressParts[1] || '',
-        zipCode: addressParts[2] || '',
-        state: addressParts[3] || 'DE'
-      }
-    };
-
-    updateApplicantDisplay();
-    updatePreview();
-  };
-  reader.readAsArrayBuffer(file);
+body {
+  font-family: sans-serif;
+  background: #f9f9f9;
+  padding: 2rem;
+  max-width: 900px;
+  margin: auto;
 }
 
-function updateApplicantDisplay() {
-  const html = `
-    <strong>Name:</strong> ${applicantInfo.name}<br>
-    <strong>Type:</strong> ${applicantInfo.isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
-    <strong>Address:</strong><br>
-    ${applicantInfo.address.address}<br>
-    ${applicantInfo.address.city} ${applicantInfo.address.zipCode}<br>
-    ${applicantInfo.address.state}
-  `;
-  applicantSummary.innerHTML = html;
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-document.getElementById('person-type').addEventListener('change', () => {
-  applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
-  updateApplicantDisplay();
-  updatePreview();
-});
-
-function updatePreview() {
-  const initials = document.getElementById('initials').value.trim();
-  const mandator = document.getElementById('mandator_json').value;
-
-  const payloads = extractedEPs.map(ep => ({
-    initials,
-    ep_number: ep,
-    applicant: applicantInfo,
-    mandator: mandator ? JSON.parse(mandator) : undefined
-  }));
-  preview.textContent = JSON.stringify(payloads, null, 2);
+.container section {
+  margin-bottom: 1.5rem;
 }
 
-document.getElementById('initials').addEventListener('input', updatePreview);
-document.getElementById('mandator_json').addEventListener('input', updatePreview);
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
 
-document.getElementById('spreadsheet').addEventListener('change', e => {
-  if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
-});
+input[type="text"],
+textarea,
+input[type="file"] {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
 
-document.getElementById('application_pdf').addEventListener('change', e => {
-  applicationPDF = e.target.files[0];
-});
+textarea {
+  height: 100px;
+  font-family: monospace;
+}
 
-document.getElementById('mandate_pdf').addEventListener('change', e => {
-  mandatePDF = e.target.files[0];
-});
+ul#ep-list {
+  list-style-type: disc;
+  padding-left: 1.2rem;
+  color: #444;
+}
 
-submitButton.addEventListener('click', async () => {
-  const initials = document.getElementById('initials').value.trim();
-  const mandator = document.getElementById('mandator_json').value;
+button#submit {
+  padding: 1rem 2rem;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
 
-  if (!applicationPDF || !initials || !applicantInfo.name) {
-    alert('Initials, applicant info and application PDF are required.');
-    return;
-  }
+button#submit:hover {
+  background: #005ec4;
+}
 
-  for (const ep of extractedEPs) {
-    const formData = new FormData();
-    formData.append('initials', initials);
-    formData.append('ep_number', ep);
-    formData.append('applicant', JSON.stringify({
-      isNaturalPerson: applicantInfo.isNaturalPerson,
-      contactAddress: applicantInfo.address,
-      email: 'placeholder@example.com',
-      naturalPersonDetails: applicantInfo.isNaturalPerson ? {
-        firstName: applicantInfo.name.split(' ')[0] || 'First',
-        lastName: applicantInfo.name.split(' ').slice(1).join(' ') || 'Last'
-      } : undefined,
-      legalEntityDetails: !applicantInfo.isNaturalPerson ? {
-        name: applicantInfo.name,
-        placeOfBusiness: applicantInfo.address.state
-      } : undefined
-    }));
-    if (mandator) formData.append('mandator', mandator);
-    formData.append('application_pdf', applicationPDF);
-    if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
+#preview {
+  background: #f0f0f0;
+  padding: 1rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
 
-    const response = await fetch('https://upc-optout-api.onrender.com/submit', {
-      method: 'POST',
-      body: formData
-    });
+#result {
+  margin-top: 1rem;
+  font-family: monospace;
+  color: #333;
+}
 
-    const resJson = await response.json();
-    const status = response.ok ? '✅' : '❌';
-    result.innerHTML += `<p>${status} ${ep}: ${resJson.requestId || resJson.error}</p>`;
-  }
-});
+.applicant-summary {
+  background: #eef5ff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-family: sans-serif;
+  line-height: 1.4;
+}
