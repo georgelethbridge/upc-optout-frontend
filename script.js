@@ -26,7 +26,15 @@ function extractFromSpreadsheet(file) {
     const headers = rows[0].map(h => (h || '').toString().toLowerCase().trim());
     console.log('Detected headers:', headers);
 
-    // duplicate index declarations removed
+    const epIndex = headers.findIndex(h => h.includes('ep pub'));
+const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
+const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
+
+if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
+  console.warn('One or more required headers were not found.');
+  alert('Could not find one of the expected headers: EP Pub Number, Owner 1 Name, Owner 1 Address. Please check your spreadsheet.');
+  return;
+}
 
     
 
@@ -152,3 +160,4 @@ submitButton.addEventListener('click', async () => {
     result.innerHTML += `<p>${status} ${ep}: ${resJson.requestId || resJson.error}</p>`;
   }
 });
+
