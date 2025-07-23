@@ -9,6 +9,7 @@ let extractedEPs = [];
 let applicationPDF = null;
 let mandatePDF = null;
 let applicantInfo = {};
+let hasParsedAddress = false;
 
 function extractFromSpreadsheet(file) {
   const reader = new FileReader();
@@ -63,7 +64,33 @@ function extractFromSpreadsheet(file) {
       : '<li>No EP Publication Numbers found</li>';
 
     const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
-    const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
+    if (!hasParsedAddress && addressFull) {
+      hasParsedAddress = true;
+      showSpinner(true);
+
+      fetch('https://upc-optout-backend.onrender.com/parse-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addressFull })
+      })
+        .then(res => res.json())
+        .then(parsed => {
+          applicantInfo = {
+            isNaturalPerson: document.getElementById('person-type').value === 'true',
+            name,
+            address: parsed
+          };
+          updateApplicantDisplay();
+          updatePreview();
+        })
+        .catch(err => {
+          console.error('Address parsing failed:', err);
+          alert('Could not parse address. Please review the format or try manually.');
+        })
+        .finally(() => {
+          showSpinner(false);
+        });
+    }
     fetch('https://upc-optout-backend.onrender.com/parse-address', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -177,3 +204,8 @@ submitButton.addEventListener('click', async () => {
     result.innerHTML += `<p>${status} ${ep}: ${resJson.requestId || resJson.error}</p>`;
   }
 });
+
+function showSpinner(show) {
+  document.getElementById('spinner').style.display = show ? 'block' : 'none';
+};
+
