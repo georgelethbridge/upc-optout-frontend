@@ -36,9 +36,9 @@ function extractFromSpreadsheet(file) {
     }
     if (headerRowIndex === -1) return alert('Header row not found');
 
-    const epIndex = headers.findIndex(h => h.includes('ep pub'));
-    const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
-    const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
+    const epIndex = headers.findIndex(h => (h || '').includes('ep pub'));
+    const nameIndex = headers.findIndex(h => (h || '').includes('owner 1 name'));
+    const addrIndex = headers.findIndex(h => (h || '').includes('owner 1 address'));
     if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
       alert('Expected headers not found');
       return;
