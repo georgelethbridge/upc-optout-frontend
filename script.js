@@ -13,123 +13,94 @@ let hasParsedAddress = false;
 
 function extractFromSpreadsheet(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     console.log('Parsed rows from spreadsheet:', rows);
     if (!rows.length || !Array.isArray(rows[0])) {
-      console.error('Spreadsheet is empty or headers are malformed');
-      alert('The spreadsheet is missing a recognizable header row. Make sure the first row contains: EP Pub Number, Owner 1 Name, Owner 1 Address');
+      alert('Spreadsheet headers are malformed.');
       return;
     }
+
     let headerRowIndex = -1;
     let headers = [];
     for (let i = 0; i < Math.min(10, rows.length); i++) {
       const candidate = rows[i].map(h => (h ?? '').toString().toLowerCase().trim());
-      if (candidate.some(h => (h || '').toString().toLowerCase().includes('ep pub'))) {
+      if (candidate.some(h => (h || '').includes('ep pub'))) {
         headers = candidate;
         headerRowIndex = i;
         break;
       }
     }
-    if (headerRowIndex === -1) {
-      console.error('Could not find a valid header row.');
-      alert('Could not find a row with EP Pub Number. Please check your spreadsheet.');
-      return;
-    }
-    console.log('Detected headers:', headers);
+    if (headerRowIndex === -1) return alert('Header row not found');
 
-    const epIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('ep pub'));
-    const nameIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 name'));
-    const addrIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 address'));
-    
-
-    
-
+    const epIndex = headers.findIndex(h => h.includes('ep pub'));
+    const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
+    const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
     if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
-      console.warn('One or more required headers were not found.');
-      alert('Could not find one of the expected headers: EP Pub Number, Owner 1 Name, Owner 1 Address. Please check your spreadsheet.');
+      alert('Expected headers not found');
       return;
     }
-    
 
     extractedEPs = rows.slice(headerRowIndex + 1)
       .map(row => (row[epIndex] ?? '').toString().trim())
       .filter(ep => ep.startsWith('EP'));
-
-    epList.innerHTML = extractedEPs.length
-      ? `<li>${extractedEPs.join('</li><li>')}</li>`
-      : '<li>No EP Publication Numbers found</li>';
+    epList.innerHTML = extractedEPs.map(ep => `<li>${ep}</li>`).join('');
 
     const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
     const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
 
+    const isNatural = document.getElementById('person-type').value === 'true';
+    showSpinner(true);
 
-    if (!hasParsedAddress && addressFull) {
-      hasParsedAddress = true;
-      showSpinner(true);
+    try {
+      const [addrRes, nameRes] = await Promise.all([
+        fetch('https://upc-optout-backend.onrender.com/parse-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: addressFull })
+        }).then(res => res.json()),
+        isNatural ? fetch('https://upc-optout-backend.onrender.com/parse-name', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        }).then(res => res.json()) : Promise.resolve(null)
+      ]);
 
-      fetch('https://upc-optout-backend.onrender.com/parse-address', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: addressFull })
-      })
-        .then(res => res.json())
-        .then(parsed => {
-          applicantInfo = {
-            isNaturalPerson: document.getElementById('person-type').value === 'true',
-            name,
-            address: parsed
-          };
-          updateApplicantDisplay();
-          updatePreview();
-        })
-        .catch(err => {
-          console.error('Address parsing failed:', err);
-          alert('Could not parse address. Please review the format or try manually.');
-        })
-        .finally(() => {
-          showSpinner(false);
-        });
-    }
-    fetch('https://upc-optout-backend.onrender.com/parse-address', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ address: addressFull })
-    })
-    .then(res => res.json())
-    .then(parsed => {
-        applicantInfo = {
-        isNaturalPerson: document.getElementById('person-type').value === 'true',
+      applicantInfo = {
+        isNaturalPerson: isNatural,
         name,
-        address: parsed
-        };
-        updateApplicantDisplay();
-        updatePreview();
-    })
-    .catch(err => {
-        console.error('Address parsing failed:', err);
-        alert('Could not parse address. Please review the format or try manually.');
-    });
-
-
-    updateApplicantDisplay();
-    updatePreview();
+        address: addrRes,
+        naturalPersonDetails: nameRes || undefined
+      };
+    } catch (err) {
+      console.error(err);
+      alert('Failed to parse address or name');
+    } finally {
+      updateApplicantDisplay();
+      updatePreview();
+      showSpinner(false);
+    }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function updateApplicantDisplay() {
-  const html = applicantInfo.name ? `
-    <strong>Name:</strong> ${applicantInfo.name}<br>
-    <strong>Type:</strong> ${applicantInfo.isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
-    <strong>Address:</strong><br>
-    ${applicantInfo.address.address}<br>
-    ${applicantInfo.address.city} ${applicantInfo.address.zipCode}<br>
-    ${applicantInfo.address.state}
-  ` : '<em>No applicant data found</em>';
+  const { address, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
+  let html = `<strong>Name:</strong> ${name}<br>
+              <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
+              <strong>Address:</strong><br>
+              ${address.address}<br>
+              ${address.city} ${address.zipCode}<br>
+              ${address.country}`;
+
+  if (isNaturalPerson && naturalPersonDetails) {
+    html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
+             <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
+  }
+
   applicantSummary.innerHTML = html;
 }
 
@@ -137,6 +108,48 @@ document.getElementById('person-type').addEventListener('change', () => {
   applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
   updateApplicantDisplay();
   updatePreview();
+});
+
+document.getElementById('edit-applicant').addEventListener('click', () => {
+  const form = document.getElementById('applicant-edit-form');
+  const isNatural = applicantInfo.isNaturalPerson;
+
+  document.getElementById('edit-name').value = applicantInfo.name;
+  document.getElementById('edit-address').value = applicantInfo.address.address;
+  document.getElementById('edit-city').value = applicantInfo.address.city;
+  document.getElementById('edit-zip').value = applicantInfo.address.zipCode;
+  document.getElementById('edit-country').value = applicantInfo.address.country;
+
+  if (isNatural && applicantInfo.naturalPersonDetails) {
+    document.getElementById('name-split-fields').style.display = 'block';
+    document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails.firstName;
+    document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails.lastName;
+  } else {
+    document.getElementById('name-split-fields').style.display = 'none';
+  }
+
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('save-applicant').addEventListener('click', () => {
+  applicantInfo.name = document.getElementById('edit-name').value;
+  applicantInfo.address = {
+    address: document.getElementById('edit-address').value,
+    city: document.getElementById('edit-city').value,
+    zipCode: document.getElementById('edit-zip').value,
+    country: document.getElementById('edit-country').value
+  };
+
+  if (applicantInfo.isNaturalPerson) {
+    applicantInfo.naturalPersonDetails = {
+      firstName: document.getElementById('edit-first').value,
+      lastName: document.getElementById('edit-last').value
+    };
+  }
+
+  updateApplicantDisplay();
+  updatePreview();
+  document.getElementById('applicant-edit-form').style.display = 'none';
 });
 
 function updatePreview() {
@@ -184,13 +197,10 @@ submitButton.addEventListener('click', async () => {
       isNaturalPerson: applicantInfo.isNaturalPerson,
       contactAddress: applicantInfo.address,
       email: 'placeholder@example.com',
-      naturalPersonDetails: applicantInfo.isNaturalPerson ? {
-        firstName: applicantInfo.name.split(' ')[0] || 'First',
-        lastName: applicantInfo.name.split(' ').slice(1).join(' ') || 'Last'
-      } : undefined,
+      naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
       legalEntityDetails: !applicantInfo.isNaturalPerson ? {
         name: applicantInfo.name,
-        placeOfBusiness: applicantInfo.address.state
+        placeOfBusiness: applicantInfo.address.country
       } : undefined
     }));
     if (mandator) formData.append('mandator', mandator);
@@ -211,4 +221,3 @@ submitButton.addEventListener('click', async () => {
 function showSpinner(show) {
   document.getElementById('spinner').style.display = show ? 'block' : 'none';
 };
-
