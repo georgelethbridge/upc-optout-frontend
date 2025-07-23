@@ -12,7 +12,7 @@
 
     <section>
       <label for="initials">Filing User Initials:</label>
-      <input type="text" id="initials" placeholder="e.g., GL" required />
+      <input type="text" id="initials" placeholder="" required />
     </section>
 
     <section>
@@ -20,7 +20,6 @@
       <div id="spreadsheet-drop" class="drop-zone">Drop spreadsheet here</div>
       <input type="file" id="spreadsheet" accept=".xlsx" />
       <ul id="ep-list"></ul>
-      <div id="spinner" style="display: none;">🔄 Parsing address via GPT...</div>
     </section>
 
     <section>
@@ -45,6 +44,7 @@
 
     <section>
       <label>Applicant Info (from spreadsheet):</label>
+      <div id="spinner" style="display: none;">🔄 Parsing address via GPT...</div>
       <div id="applicant-summary" class="applicant-summary"></div>
     </section>
 
