@@ -64,6 +64,9 @@ function extractFromSpreadsheet(file) {
       : '<li>No EP Publication Numbers found</li>';
 
     const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
+    const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
+
+
     if (!hasParsedAddress && addressFull) {
       hasParsedAddress = true;
       showSpinner(true);
