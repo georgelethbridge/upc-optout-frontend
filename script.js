@@ -276,42 +276,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
-  // For the copy button, add console.log to debug
-  if (copyRequestJsonButton) {
-    console.log('Copy button found');
-    copyRequestJsonButton.addEventListener('click', () => {
-      console.log('Copy button clicked');
-      if (requestBodyDisplay.textContent) {
-        navigator.clipboard.writeText(requestBodyDisplay.textContent)
-          .then(() => alert('Copied to clipboard!'))
-          .catch(err => console.error('Failed to copy:', err));
-      }
-    });
-  } else {
-    console.log('Copy button not found');
-  }
-
-  // For the edit/save buttons, add console.log to debug
+  // For the edit/save buttons, add toggle functionality
   if (editBtn && saveBtn) {
     console.log('Edit and Save buttons found');
+    let originalInfo = null; // Store original info for cancel
+
     editBtn.addEventListener('click', () => {
       console.log('Edit button clicked');
-      const isNatural = applicantInfo.isNaturalPerson;
-      document.getElementById('edit-name').value = applicantInfo.name || '';
-      document.getElementById('edit-address').value = applicantInfo.address.address || '';
-      document.getElementById('edit-city').value = applicantInfo.address.city || '';
-      document.getElementById('edit-zip').value = applicantInfo.address.zipCode || '';
-      document.getElementById('edit-country').value = applicantInfo.address.country || '';
-      if (isNatural) {
-        document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails?.firstName || '';
-        document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails?.lastName || '';
-        document.getElementById('name-split-fields').style.display = 'block';
+      if (editBtn.textContent === 'Edit') {
+        // Store original info before editing
+        originalInfo = JSON.parse(JSON.stringify(applicantInfo));
+        
+        const isNatural = applicantInfo.isNaturalPerson;
+        document.getElementById('edit-name').value = applicantInfo.name || '';
+        document.getElementById('edit-address').value = applicantInfo.address.address || '';
+        document.getElementById('edit-city').value = applicantInfo.address.city || '';
+        document.getElementById('edit-zip').value = applicantInfo.address.zipCode || '';
+        document.getElementById('edit-country').value = applicantInfo.address.country || '';
+        if (isNatural) {
+          document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails?.firstName || '';
+          document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails?.lastName || '';
+          document.getElementById('name-split-fields').style.display = 'block';
+        } else {
+          document.getElementById('name-split-fields').style.display = 'none';
+        }
+        editForm.style.display = 'block';
+        editBtn.textContent = 'Cancel';
       } else {
-        document.getElementById('name-split-fields').style.display = 'none';
+        // Cancel was clicked - restore original info
+        if (originalInfo) {
+          applicantInfo = originalInfo;
+          updateApplicantDisplay();
+          updatePreview();
+        }
+        editForm.style.display = 'none';
+        editBtn.textContent = 'Edit';
       }
-      editForm.style.display = 'block';
     });
-
 
     saveBtn.addEventListener('click', () => {
       console.log('Save button clicked');
@@ -331,8 +332,37 @@ document.addEventListener('DOMContentLoaded', () => {
       updateApplicantDisplay();
       updatePreview();
       editForm.style.display = 'none';
+      editBtn.textContent = 'Edit'; // Reset button text
     });
   } else {
     console.log('Edit/Save buttons not found');
+  }
+
+  // For the copy button, update with icon toggle
+  if (copyRequestJsonButton) {
+    console.log('Copy button found');
+    const copyIcon = copyRequestJsonButton.querySelector('.copy-icon');
+    const successIcon = copyRequestJsonButton.querySelector('.success-icon');
+    
+    copyRequestJsonButton.addEventListener('click', () => {
+      console.log('Copy button clicked');
+      if (requestBodyDisplay.textContent) {
+        navigator.clipboard.writeText(requestBodyDisplay.textContent)
+          .then(() => {
+            // Hide copy icon, show success icon
+            copyIcon.style.display = 'none';
+            successIcon.style.display = 'inline-block';
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+              copyIcon.style.display = 'inline-block';
+              successIcon.style.display = 'none';
+            }, 2000);
+          })
+          .catch(err => console.error('Failed to copy:', err));
+      }
+    });
+  } else {
+    console.log('Copy button not found');
   }
 });
