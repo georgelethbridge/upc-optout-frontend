@@ -128,20 +128,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateApplicantDisplay() {
-    const { address, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
-    let html = `<strong>Name:</strong> ${name}<br>
-                <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
-                <strong>Address:</strong><br>
-                ${address.address}<br>
-                ${address.city} ${address.zipCode}<br>
-                ${address.country}`;
-
-    if (isNaturalPerson && naturalPersonDetails) {
-      html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
-              <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
+    try {
+      const { address, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
+      let html = `<strong>Name:</strong> ${name}<br>
+                  <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
+                  <strong>Address:</strong><br>
+                  ${address.address}<br>
+                  ${address.city} ${address.zipCode}<br>
+                  ${address.country}`;
+  
+      if (isNaturalPerson && naturalPersonDetails) {
+        html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
+                <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
+      }
+  
+      applicantSummary.innerHTML = html;
+    } catch (error) {
+      console.error('Error updating applicant display:', error);
     }
-
-    applicantSummary.innerHTML = html;
   }
 
   function updatePreview() {
@@ -209,12 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.getElementById('mandate_pdf').addEventListener('change', e => {
-    mandatePDF = e.target.files[0];
-    readFileAsBase64(mandatePDF, base64 => {
-      mandatePdfBase64Display.textContent = base64;
+  const mandatePdfInput = document.getElementById('mandate_pdf');
+  if (mandatePdfInput) {
+    mandatePdfInput.addEventListener('change', e => {
+      mandatePDF = e.target.files[0];
+      readFileAsBase64(mandatePDF, base64 => {
+        mandatePdfBase64Display.textContent = base64;
+      });
     });
-  });
+  }
 
   if (submitButton) {
 
