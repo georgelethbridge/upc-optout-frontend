@@ -1,6 +1,5 @@
 // script.js
 
-
 document.addEventListener('DOMContentLoaded', () => {
   let extractedEPs = [];
   let applicationPDF = null;
@@ -31,17 +30,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function extractFromSpreadsheet(file) {
+    console.log('Starting to extract from spreadsheet:', file.name);
     const reader = new FileReader();
     reader.onload = async (e) => {
+      console.log('FileReader loaded');
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      console.log('Parsed rows from spreadsheet:', rows);
+  
       if (!rows.length || !Array.isArray(rows[0])) {
+        console.error('Spreadsheet headers are malformed:', rows);
         alert('Spreadsheet headers are malformed.');
         return;
       }
-
+  
       let headerRowIndex = -1;
       let headers = [];
       for (let i = 0; i < Math.min(10, rows.length); i++) {
@@ -52,27 +56,38 @@ document.addEventListener('DOMContentLoaded', () => {
           break;
         }
       }
-      if (headerRowIndex === -1) return alert('Header row not found');
-
+      console.log('Detected headers:', headers);
+      console.log('Header row index:', headerRowIndex);
+  
+      if (headerRowIndex === -1) {
+        console.error('Header row not found');
+        alert('Header row not found');
+        return;
+      }
+  
       const epIndex = headers.findIndex(h => (h || '').includes('ep pub'));
       const nameIndex = headers.findIndex(h => (h || '').includes('owner 1 name'));
       const addrIndex = headers.findIndex(h => (h || '').includes('owner 1 address'));
+      console.log('Found indices:', { epIndex, nameIndex, addrIndex });
+  
       if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
+        console.error('Expected headers not found:', { epIndex, nameIndex, addrIndex });
         alert('Expected headers not found');
         return;
       }
-
+  
       extractedEPs = rows.slice(headerRowIndex + 1)
         .map(row => (row[epIndex] ?? '').toString().trim())
         .filter(ep => ep.startsWith('EP'));
-      epList.innerHTML = extractedEPs.map(ep => `<li>${ep}</li>`).join('');
-
+      console.log('Extracted EPs:', extractedEPs);
+  
       const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
       const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
-
+      console.log('Extracted name and address:', { name, addressFull });
+  
       const isNatural = document.getElementById('person-type').value === 'true';
       showSpinner(true);
-
+  
       try {
         const [addrRes, nameRes] = await Promise.all([
           fetch('https://upc-optout-backend.onrender.com/parse-address', {
@@ -86,15 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ name })
           }).then(res => res.json()) : Promise.resolve(null)
         ]);
-
+        console.log('API responses:', { addrRes, nameRes });
+  
         applicantInfo = {
           isNaturalPerson: isNatural,
           name,
           address: addrRes,
           naturalPersonDetails: nameRes || undefined
         };
+        console.log('Updated applicantInfo:', applicantInfo);
       } catch (err) {
-        console.error(err);
+        console.error('API error:', err);
         alert('Failed to parse address or name');
       } finally {
         updateApplicantDisplay();
@@ -102,6 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
         showSpinner(false);
       }
     };
+    
+    reader.onerror = (error) => {
+      console.error('FileReader error:', error);
+    };
+    
     reader.readAsArrayBuffer(file);
   }
 
