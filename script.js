@@ -7,6 +7,7 @@ const submitButton = document.getElementById('submit');
 const appPdfBase64Display = document.getElementById('app-pdf-base64');
 const mandatePdfBase64Display = document.getElementById('mandate-pdf-base64');
 const requestBodyDisplay = document.getElementById('request-json');
+const copyRequestJsonButton = document.getElementById('copy-request-json');
 
 let extractedEPs = [];
 let applicationPDF = null;
@@ -119,9 +120,10 @@ document.getElementById('person-type').addEventListener('change', () => {
   updatePreview();
 });
 
+document.getElementById('initials').addEventListener('input', updatePreview);
+
 function updatePreview() {
   const initials = document.getElementById('initials').value.trim();
-  // const mandator = document.getElementById('mandator_json').value;
   const ep = extractedEPs[0];
   const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
 
@@ -160,9 +162,6 @@ function updatePreview() {
   requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
 }
 
-document.getElementById('initials').addEventListener('input', updatePreview);
-// document.getElementById('mandator_json').addEventListener('input', updatePreview);
-
 document.getElementById('spreadsheet').addEventListener('change', e => {
   if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
 });
@@ -185,7 +184,6 @@ document.getElementById('mandate_pdf').addEventListener('change', e => {
 
 submitButton.addEventListener('click', async () => {
   const initials = document.getElementById('initials').value.trim();
-  // const mandator = document.getElementById('mandator_json').value;
 
   if (!applicationPDF || !initials || !applicantInfo.name) {
     alert('Initials, applicant info and application PDF are required.');
@@ -206,7 +204,6 @@ submitButton.addEventListener('click', async () => {
         placeOfBusiness: applicantInfo.address.country
       } : undefined
     }));
-    // if (mandator) formData.append('mandator', mandator);
     formData.append('application_pdf', applicationPDF);
     if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
 
@@ -224,3 +221,11 @@ submitButton.addEventListener('click', async () => {
 function showSpinner(show) {
   document.getElementById('spinner').style.display = show ? 'block' : 'none';
 };
+
+if (copyRequestJsonButton) {
+  copyRequestJsonButton.addEventListener('click', () => {
+    navigator.clipboard.writeText(requestBodyDisplay.textContent)
+      .then(() => alert('Request JSON copied to clipboard.'))
+      .catch(() => alert('Failed to copy JSON.'));
+  });
+}

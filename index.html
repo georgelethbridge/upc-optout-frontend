@@ -28,7 +28,7 @@
       <input type="file" id="application_pdf" accept="application/pdf" required />
     </section>
 
-    <section>
+    <!-- <section>
       <label>Application PDF (Base64):</label>
       <textarea id="app-pdf-base64" readonly></textarea>
     </section>
@@ -42,7 +42,7 @@
     <section>
       <label>Mandate PDF (Base64):</label>
       <textarea id="mandate-pdf-base64" readonly></textarea>
-    </section>
+    </section> -->
 
     <section>
       <label for="person-type">Applicant Type:</label>
@@ -82,10 +82,12 @@
       <pre id="preview"></pre>
     </section>
 
-    <section>
+    <section style="position: relative;">
       <label>Final Request JSON:</label>
-      <pre id="request-json" style="white-space:pre-wrap; background:#f9f9f9; border:1px solid #ccc; padding:1em;"></pre>
+      <button id="copy-request-json" style="position:absolute; top:0.5rem; right:0.5rem;">Copy</button>
+      <pre id="request-json" style="white-space:pre-wrap; background:#f9f9f9; border:1px solid #ccc; padding:1em; max-height:300px; overflow:auto;"></pre>
     </section>
+
 
 
     <!-- <button id="submit">Submit Opt-Out Request(s)</button>
