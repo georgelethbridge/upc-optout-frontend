@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsArrayBuffer(file);
   }
 
-  // Fix 1: Update the updateApplicantDisplay function to handle missing address fields better
+  // Update the updateApplicantDisplay function to properly show the state
   function updateApplicantDisplay() {
     try {
       const { address = {}, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
@@ -136,20 +136,23 @@ document.addEventListener('DOMContentLoaded', () => {
                   <strong>Address:</strong><br>
                   ${address.address || ''}<br>
                   ${address.city || ''} ${address.zipCode || ''}<br>
-                  ${address.state || ''}`;
+                  ${address.state || ''}`;  // Make sure state is displayed
 
       if (isNaturalPerson && naturalPersonDetails) {
         html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName || ''}<br>
                 <strong>Last Name:</strong> ${naturalPersonDetails.lastName || ''}`;
       }
 
-      applicantSummary.innerHTML = html;
+      const applicantSummary = document.getElementById('applicant-summary');
+      if (applicantSummary) {
+        applicantSummary.innerHTML = html;
+      }
     } catch (error) {
       console.error('Error updating applicant display:', error);
     }
   }
 
-  // Fix 2: Update the updatePreview function to use state instead of country
+  // Update the preview function to include state in the payload
   function updatePreview() {
     const initials = document.getElementById('initials').value.trim();
     const ep = extractedEPs[0];
@@ -164,14 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
           address: applicantInfo.address?.address || '',
           city: applicantInfo.address?.city || '',
           zipCode: applicantInfo.address?.zipCode || '',
-          state: applicantInfo.address?.state || ''  // Changed from country to state
+          state: applicantInfo.address?.state || ''  // Ensure state is included
         },
         ...(applicantInfo.isNaturalPerson ? {
           naturalPersonDetails: applicantInfo.naturalPersonDetails
         } : {
           legalEntityDetails: { 
-            name: applicantInfo.name,
-            // placeOfBusiness: applicantInfo.address?.state || '' // Optional field - commented out
+            name: applicantInfo.name
           }
         })
       },
