@@ -135,13 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   <strong>Address:</strong><br>
                   ${address.address}<br>
                   ${address.city} ${address.zipCode}<br>
-                  ${address.country}`;
-  
+                  ${address.state}`;
+
       if (isNaturalPerson && naturalPersonDetails) {
         html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
                 <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
       }
-  
+
       applicantSummary.innerHTML = html;
     } catch (error) {
       console.error('Error updating applicant display:', error);
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
           naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
           legalEntityDetails: !applicantInfo.isNaturalPerson ? {
             name: applicantInfo.name,
-            placeOfBusiness: applicantInfo.address.country
+            placeOfBusiness: applicantInfo.address.state
           } : undefined
         }));
         formData.append('application_pdf', applicationPDF);
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-address').value = applicantInfo.address.address || '';
         document.getElementById('edit-city').value = applicantInfo.address.city || '';
         document.getElementById('edit-zip').value = applicantInfo.address.zipCode || '';
-        document.getElementById('edit-country').value = applicantInfo.address.country || '';
+        document.getElementById('edit-country').value = applicantInfo.address.state || '';
         if (isNatural) {
           document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails?.firstName || '';
           document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails?.lastName || '';
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         address: document.getElementById('edit-address').value.trim(),
         city: document.getElementById('edit-city').value.trim(),
         zipCode: document.getElementById('edit-zip').value.trim(),
-        country: document.getElementById('edit-country').value.trim()
+        state: document.getElementById('edit-country').value.trim() // Note: You might want to rename the input ID as well
       };
       if (applicantInfo.isNaturalPerson) {
         applicantInfo.naturalPersonDetails = {
