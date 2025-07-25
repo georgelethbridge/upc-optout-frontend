@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // For the edit/save buttons, add toggle functionality
-  if (editBtn && saveBtn) {
+  if (editBtn && saveBtn && editForm) {
     console.log('Edit and Save buttons found');
     let originalInfo = null; // Store original info for cancel
 
@@ -287,19 +287,28 @@ document.addEventListener('DOMContentLoaded', () => {
         // Store original info before editing
         originalInfo = JSON.parse(JSON.stringify(applicantInfo));
         
-        const isNatural = applicantInfo.isNaturalPerson;
-        document.getElementById('edit-name').value = applicantInfo.name || '';
-        document.getElementById('edit-address').value = applicantInfo.address.address || '';
-        document.getElementById('edit-city').value = applicantInfo.address.city || '';
-        document.getElementById('edit-zip').value = applicantInfo.address.zipCode || '';
-        document.getElementById('edit-state').value = applicantInfo.address.state || '';
-        if (isNatural) {
-          document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails?.firstName || '';
-          document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails?.lastName || '';
-          document.getElementById('name-split-fields').style.display = 'block';
-        } else {
-          document.getElementById('name-split-fields').style.display = 'none';
+        // Safely set form values with null checks
+        const setInputValue = (id, value) => {
+          const element = document.getElementById(id);
+          if (element) element.value = value || '';
+        };
+
+        setInputValue('edit-name', applicantInfo.name);
+        setInputValue('edit-address', applicantInfo.address?.address);
+        setInputValue('edit-city', applicantInfo.address?.city);
+        setInputValue('edit-zip', applicantInfo.address?.zipCode);
+        setInputValue('edit-state', applicantInfo.address?.state);
+
+        const nameSplitFields = document.getElementById('name-split-fields');
+        if (nameSplitFields) {
+          nameSplitFields.style.display = applicantInfo.isNaturalPerson ? 'block' : 'none';
         }
+
+        if (applicantInfo.isNaturalPerson) {
+          setInputValue('edit-first', applicantInfo.naturalPersonDetails?.firstName);
+          setInputValue('edit-last', applicantInfo.naturalPersonDetails?.lastName);
+        }
+
         editForm.style.display = 'block';
         editBtn.textContent = 'Cancel';
       } else {
@@ -316,19 +325,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveBtn.addEventListener('click', () => {
       console.log('Save button clicked');
-      applicantInfo.name = document.getElementById('edit-name').value.trim();
+      const getValue = (id) => document.getElementById(id)?.value?.trim() || '';
+
+      applicantInfo.name = getValue('edit-name');
       applicantInfo.address = {
-        address: document.getElementById('edit-address').value.trim(),
-        city: document.getElementById('edit-city').value.trim(),
-        zipCode: document.getElementById('edit-zip').value.trim(),
-        state: document.getElementById('edit-state').value.trim() // Note: You might want to rename the input ID as well
+        address: getValue('edit-address'),
+        city: getValue('edit-city'),
+        zipCode: getValue('edit-zip'),
+        state: getValue('edit-state')
       };
+
       if (applicantInfo.isNaturalPerson) {
         applicantInfo.naturalPersonDetails = {
-          firstName: document.getElementById('edit-first').value.trim(),
-          lastName: document.getElementById('edit-last').value.trim()
+          firstName: getValue('edit-first'),
+          lastName: getValue('edit-last')
         };
       }
+
       updateApplicantDisplay();
       updatePreview();
       editForm.style.display = 'none';
@@ -348,13 +361,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (requestBodyDisplay.textContent) {
         navigator.clipboard.writeText(requestBodyDisplay.textContent)
           .then(() => {
-            copyIcon.style.display = 'none';
-            successIcon.style.display = 'block';
-            
-            setTimeout(() => {
-              copyIcon.style.display = 'block';
-              successIcon.style.display = 'none';
-            }, 2000);
+            if (copyIcon && successIcon) {
+              copyIcon.style.display = 'none';
+              successIcon.style.display = 'block';
+              
+              setTimeout(() => {
+                copyIcon.style.display = 'block';
+                successIcon.style.display = 'none';
+              }, 2000);
+            }
           })
           .catch(err => console.error('Failed to copy:', err));
       }
