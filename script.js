@@ -127,19 +127,20 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsArrayBuffer(file);
   }
 
+  // Fix 1: Update the updateApplicantDisplay function to handle missing address fields better
   function updateApplicantDisplay() {
     try {
-      const { address, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
-      let html = `<strong>Name:</strong> ${name}<br>
+      const { address = {}, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
+      let html = `<strong>Name:</strong> ${name || ''}<br>
                   <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
                   <strong>Address:</strong><br>
-                  ${address.address}<br>
-                  ${address.city} ${address.zipCode}<br>
-                  ${address.state}`;
+                  ${address.address || ''}<br>
+                  ${address.city || ''} ${address.zipCode || ''}<br>
+                  ${address.state || ''}`;
 
       if (isNaturalPerson && naturalPersonDetails) {
-        html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
-                <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
+        html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName || ''}<br>
+                <strong>Last Name:</strong> ${naturalPersonDetails.lastName || ''}`;
       }
 
       applicantSummary.innerHTML = html;
@@ -148,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Fix 2: Update the updatePreview function to use state instead of country
   function updatePreview() {
     const initials = document.getElementById('initials').value.trim();
     const ep = extractedEPs[0];
@@ -158,11 +160,19 @@ document.addEventListener('DOMContentLoaded', () => {
       internalReference: ep,
       applicant: {
         isNaturalPerson: applicantInfo.isNaturalPerson,
-        contactAddress: applicantInfo.address,
+        contactAddress: {
+          address: applicantInfo.address?.address || '',
+          city: applicantInfo.address?.city || '',
+          zipCode: applicantInfo.address?.zipCode || '',
+          state: applicantInfo.address?.state || ''  // Changed from country to state
+        },
         ...(applicantInfo.isNaturalPerson ? {
           naturalPersonDetails: applicantInfo.naturalPersonDetails
         } : {
-          legalEntityDetails: { name: applicantInfo.name }
+          legalEntityDetails: { 
+            name: applicantInfo.name,
+            placeOfBusiness: applicantInfo.address?.state || '' // Changed from country to state
+          }
         })
       },
       patent: {
