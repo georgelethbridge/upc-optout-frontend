@@ -118,13 +118,15 @@
       <pre id="preview"></pre>
     </section>
 
-    <section class="request-json-container">
+    <section style="position: relative;">
       <label>Final Request JSON:</label>
-      <pre id="request-json" style="white-space:pre-wrap; background:#f9f9f9; border:1px solid #ccc; padding:1em; max-height:300px; overflow:auto;"></pre>
-      <button id="copy-request-json" class="copy-button">
-        <img src="copy-icon.png" alt="Copy" />
-        <img src="check-icon.png" alt="Copied" style="display:none;" />
-      </button>
+      <div class="request-json-container">
+        <pre id="request-json" style="white-space:pre-wrap; background:#f9f9f9; border:1px solid #ccc; padding:2.5rem 1rem 1rem; position:relative;"></pre>
+        <button id="copy-request-json" style="position:absolute; top:8px; right:8px; border:none; background:none; cursor:pointer; padding:4px; width:24px; height:24px;">
+          <img src="./copy-icon.svg" alt="Copy" class="copy-icon" style="width:100%; height:100%;" />
+          <img src="./check-icon.svg" alt="Copied" class="success-icon" style="width:100%; height:100%; display:none;" />
+        </button>
+      </div>
     </section>
 
 
