@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } : {
           legalEntityDetails: { 
             name: applicantInfo.name,
-            placeOfBusiness: applicantInfo.address?.state || '' // Changed from country to state
+            // placeOfBusiness: applicantInfo.address?.state || '' // Optional field - commented out
           }
         })
       },
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
           naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
           legalEntityDetails: !applicantInfo.isNaturalPerson ? {
             name: applicantInfo.name,
-            placeOfBusiness: applicantInfo.address.state
+            // placeOfBusiness: applicantInfo.address.state // Optional field - commented out
           } : undefined
         }));
         formData.append('application_pdf', applicationPDF);
