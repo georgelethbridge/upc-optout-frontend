@@ -192,26 +192,39 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('spinner').style.display = show ? 'block' : 'none';
   };
 
-  document.getElementById('person-type').addEventListener('change', () => {
-    applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
-    updateApplicantDisplay();
-    updatePreview();
-  });
-
-  document.getElementById('initials').addEventListener('input', updatePreview);
-  
-  document.getElementById('spreadsheet').addEventListener('change', e => {
-    if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
-  });
-
-  document.getElementById('application_pdf').addEventListener('change', e => {
-    applicationPDF = e.target.files[0];
-    readFileAsBase64(applicationPDF, base64 => {
-      appPdfBase64Display.textContent = base64;
-      applicationPdfBase64 = base64;
+  // Add event listeners with null checks for all elements
+  const personType = document.getElementById('person-type');
+  if (personType) {
+    personType.addEventListener('change', () => {
+      applicantInfo.isNaturalPerson = personType.value === 'true';
+      updateApplicantDisplay();
       updatePreview();
     });
-  });
+  }
+
+  const initials = document.getElementById('initials');
+  if (initials) {
+    initials.addEventListener('input', updatePreview);
+  }
+
+  const spreadsheet = document.getElementById('spreadsheet');
+  if (spreadsheet) {
+    spreadsheet.addEventListener('change', e => {
+      if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
+    });
+  }
+
+  const applicationPdfInput = document.getElementById('application_pdf');
+  if (applicationPdfInput) {
+    applicationPdfInput.addEventListener('change', e => {
+      applicationPDF = e.target.files[0];
+      readFileAsBase64(applicationPDF, base64 => {
+        appPdfBase64Display.textContent = base64;
+        applicationPdfBase64 = base64;
+        updatePreview();
+      });
+    });
+  }
 
   const mandatePdfInput = document.getElementById('mandate_pdf');
   if (mandatePdfInput) {
@@ -263,18 +276,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
+  // For the copy button, add console.log to debug
   if (copyRequestJsonButton) {
+    console.log('Copy button found');
     copyRequestJsonButton.addEventListener('click', () => {
+      console.log('Copy button clicked');
       if (requestBodyDisplay.textContent) {
         navigator.clipboard.writeText(requestBodyDisplay.textContent)
           .then(() => alert('Copied to clipboard!'))
           .catch(err => console.error('Failed to copy:', err));
       }
     });
+  } else {
+    console.log('Copy button not found');
   }
 
+  // For the edit/save buttons, add console.log to debug
   if (editBtn && saveBtn) {
+    console.log('Edit and Save buttons found');
     editBtn.addEventListener('click', () => {
+      console.log('Edit button clicked');
       const isNatural = applicantInfo.isNaturalPerson;
       document.getElementById('edit-name').value = applicantInfo.name || '';
       document.getElementById('edit-address').value = applicantInfo.address.address || '';
@@ -293,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     saveBtn.addEventListener('click', () => {
+      console.log('Save button clicked');
       applicantInfo.name = document.getElementById('edit-name').value.trim();
       applicantInfo.address = {
         address: document.getElementById('edit-address').value.trim(),
@@ -310,5 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePreview();
       editForm.style.display = 'none';
     });
+  } else {
+    console.log('Edit/Save buttons not found');
   }
 });
