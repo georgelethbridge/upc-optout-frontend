@@ -1,155 +1,15 @@
 // script.js
-let extractedEPs = [];
-let applicationPDF = null;
-let mandatePDF = null;
-let applicantInfo = {};
-let applicationPdfBase64 = "";
-let hasParsedAddress = false;
 
-function readFileAsBase64(file, callback) {
-  const reader = new FileReader();
-  reader.onload = () => callback(reader.result.split(',')[1]);
-  reader.readAsDataURL(file);
-}
-
-function extractFromSpreadsheet(file) {
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    if (!rows.length || !Array.isArray(rows[0])) {
-      alert('Spreadsheet headers are malformed.');
-      return;
-    }
-
-    let headerRowIndex = -1;
-    let headers = [];
-    for (let i = 0; i < Math.min(10, rows.length); i++) {
-      const candidate = rows[i].map(h => (h ?? '').toString().toLowerCase().trim());
-      if (candidate.some(h => (h || '').includes('ep pub'))) {
-        headers = candidate;
-        headerRowIndex = i;
-        break;
-      }
-    }
-    if (headerRowIndex === -1) return alert('Header row not found');
-
-    const epIndex = headers.findIndex(h => (h || '').includes('ep pub'));
-    const nameIndex = headers.findIndex(h => (h || '').includes('owner 1 name'));
-    const addrIndex = headers.findIndex(h => (h || '').includes('owner 1 address'));
-    if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
-      alert('Expected headers not found');
-      return;
-    }
-
-    extractedEPs = rows.slice(headerRowIndex + 1)
-      .map(row => (row[epIndex] ?? '').toString().trim())
-      .filter(ep => ep.startsWith('EP'));
-    epList.innerHTML = extractedEPs.map(ep => `<li>${ep}</li>`).join('');
-
-    const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
-    const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
-
-    const isNatural = document.getElementById('person-type').value === 'true';
-    showSpinner(true);
-
-    try {
-      const [addrRes, nameRes] = await Promise.all([
-        fetch('https://upc-optout-backend.onrender.com/parse-address', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address: addressFull })
-        }).then(res => res.json()),
-        isNatural ? fetch('https://upc-optout-backend.onrender.com/parse-name', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name })
-        }).then(res => res.json()) : Promise.resolve(null)
-      ]);
-
-      applicantInfo = {
-        isNaturalPerson: isNatural,
-        name,
-        address: addrRes,
-        naturalPersonDetails: nameRes || undefined
-      };
-    } catch (err) {
-      console.error(err);
-      alert('Failed to parse address or name');
-    } finally {
-      updateApplicantDisplay();
-      updatePreview();
-      showSpinner(false);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function updateApplicantDisplay() {
-  const { address, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
-  let html = `<strong>Name:</strong> ${name}<br>
-              <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
-              <strong>Address:</strong><br>
-              ${address.address}<br>
-              ${address.city} ${address.zipCode}<br>
-              ${address.country}`;
-
-  if (isNaturalPerson && naturalPersonDetails) {
-    html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
-             <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
-  }
-
-  applicantSummary.innerHTML = html;
-}
-
-function updatePreview() {
-  const initials = document.getElementById('initials').value.trim();
-  const ep = extractedEPs[0];
-  const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
-
-  const basePayload = {
-    statusPersonLodgingApplication: status,
-    internalReference: ep,
-    applicant: {
-      isNaturalPerson: applicantInfo.isNaturalPerson,
-      contactAddress: applicantInfo.address,
-      ...(applicantInfo.isNaturalPerson ? {
-        naturalPersonDetails: applicantInfo.naturalPersonDetails
-      } : {
-        legalEntityDetails: { name: applicantInfo.name }
-      })
-    },
-    patent: {
-      patentNumber: ep
-    },
-    documents: [
-      {
-        documentType: 'Application',
-        documentTitle: `Opt-out ${ep}`,
-        documentDescription: `Opt-out application for ${ep}`,
-        attachments: [
-          {
-            data: applicationPdfBase64,
-            language: 'en',
-            filename: `Optout_${ep}.pdf`,
-            mimeType: 'application/pdf'
-          }
-        ]
-      }
-    ]
-  };
-
-  requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
-}
-
-
-function showSpinner(show) {
-  document.getElementById('spinner').style.display = show ? 'block' : 'none';
-};
 
 document.addEventListener('DOMContentLoaded', () => {
+  let extractedEPs = [];
+  let applicationPDF = null;
+  let mandatePDF = null;
+  let applicantInfo = {};
+  let applicationPdfBase64 = "";
+  let hasParsedAddress = false;
+
+
   const epList = document.getElementById('ep-list');
   const preview = document.getElementById('preview');
   const result = document.getElementById('result');
@@ -162,6 +22,149 @@ document.addEventListener('DOMContentLoaded', () => {
   const editBtn = document.getElementById('edit-applicant');
   const saveBtn = document.getElementById('save-applicant');
   const editForm = document.getElementById('applicant-edit-form');
+
+
+  function readFileAsBase64(file, callback) {
+    const reader = new FileReader();
+    reader.onload = () => callback(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  }
+
+  function extractFromSpreadsheet(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      if (!rows.length || !Array.isArray(rows[0])) {
+        alert('Spreadsheet headers are malformed.');
+        return;
+      }
+
+      let headerRowIndex = -1;
+      let headers = [];
+      for (let i = 0; i < Math.min(10, rows.length); i++) {
+        const candidate = rows[i].map(h => (h ?? '').toString().toLowerCase().trim());
+        if (candidate.some(h => (h || '').includes('ep pub'))) {
+          headers = candidate;
+          headerRowIndex = i;
+          break;
+        }
+      }
+      if (headerRowIndex === -1) return alert('Header row not found');
+
+      const epIndex = headers.findIndex(h => (h || '').includes('ep pub'));
+      const nameIndex = headers.findIndex(h => (h || '').includes('owner 1 name'));
+      const addrIndex = headers.findIndex(h => (h || '').includes('owner 1 address'));
+      if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
+        alert('Expected headers not found');
+        return;
+      }
+
+      extractedEPs = rows.slice(headerRowIndex + 1)
+        .map(row => (row[epIndex] ?? '').toString().trim())
+        .filter(ep => ep.startsWith('EP'));
+      epList.innerHTML = extractedEPs.map(ep => `<li>${ep}</li>`).join('');
+
+      const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
+      const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
+
+      const isNatural = document.getElementById('person-type').value === 'true';
+      showSpinner(true);
+
+      try {
+        const [addrRes, nameRes] = await Promise.all([
+          fetch('https://upc-optout-backend.onrender.com/parse-address', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: addressFull })
+          }).then(res => res.json()),
+          isNatural ? fetch('https://upc-optout-backend.onrender.com/parse-name', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+          }).then(res => res.json()) : Promise.resolve(null)
+        ]);
+
+        applicantInfo = {
+          isNaturalPerson: isNatural,
+          name,
+          address: addrRes,
+          naturalPersonDetails: nameRes || undefined
+        };
+      } catch (err) {
+        console.error(err);
+        alert('Failed to parse address or name');
+      } finally {
+        updateApplicantDisplay();
+        updatePreview();
+        showSpinner(false);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function updateApplicantDisplay() {
+    const { address, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
+    let html = `<strong>Name:</strong> ${name}<br>
+                <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
+                <strong>Address:</strong><br>
+                ${address.address}<br>
+                ${address.city} ${address.zipCode}<br>
+                ${address.country}`;
+
+    if (isNaturalPerson && naturalPersonDetails) {
+      html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName}<br>
+              <strong>Last Name:</strong> ${naturalPersonDetails.lastName}`;
+    }
+
+    applicantSummary.innerHTML = html;
+  }
+
+  function updatePreview() {
+    const initials = document.getElementById('initials').value.trim();
+    const ep = extractedEPs[0];
+    const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
+
+    const basePayload = {
+      statusPersonLodgingApplication: status,
+      internalReference: ep,
+      applicant: {
+        isNaturalPerson: applicantInfo.isNaturalPerson,
+        contactAddress: applicantInfo.address,
+        ...(applicantInfo.isNaturalPerson ? {
+          naturalPersonDetails: applicantInfo.naturalPersonDetails
+        } : {
+          legalEntityDetails: { name: applicantInfo.name }
+        })
+      },
+      patent: {
+        patentNumber: ep
+      },
+      documents: [
+        {
+          documentType: 'Application',
+          documentTitle: `Opt-out ${ep}`,
+          documentDescription: `Opt-out application for ${ep}`,
+          attachments: [
+            {
+              data: applicationPdfBase64,
+              language: 'en',
+              filename: `Optout_${ep}.pdf`,
+              mimeType: 'application/pdf'
+            }
+          ]
+        }
+      ]
+    };
+
+    requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
+  }
+
+  function showSpinner(show) {
+    document.getElementById('spinner').style.display = show ? 'block' : 'none';
+  };
 
   document.getElementById('person-type').addEventListener('change', () => {
     applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
