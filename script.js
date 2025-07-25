@@ -229,3 +229,45 @@ if (copyRequestJsonButton) {
       .catch(() => alert('Failed to copy JSON.'));
   });
 }
+
+const editBtn = document.getElementById('edit-applicant');
+const saveBtn = document.getElementById('save-applicant');
+const editForm = document.getElementById('applicant-edit-form');
+
+if (editBtn && saveBtn) {
+  editBtn.addEventListener('click', () => {
+    const isNatural = applicantInfo.isNaturalPerson;
+    document.getElementById('edit-name').value = applicantInfo.name || '';
+    document.getElementById('edit-address').value = applicantInfo.address.address || '';
+    document.getElementById('edit-city').value = applicantInfo.address.city || '';
+    document.getElementById('edit-zip').value = applicantInfo.address.zipCode || '';
+    document.getElementById('edit-country').value = applicantInfo.address.country || '';
+    if (isNatural) {
+      document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails?.firstName || '';
+      document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails?.lastName || '';
+      document.getElementById('name-split-fields').style.display = 'block';
+    } else {
+      document.getElementById('name-split-fields').style.display = 'none';
+    }
+    editForm.style.display = 'block';
+  });
+
+  saveBtn.addEventListener('click', () => {
+    applicantInfo.name = document.getElementById('edit-name').value.trim();
+    applicantInfo.address = {
+      address: document.getElementById('edit-address').value.trim(),
+      city: document.getElementById('edit-city').value.trim(),
+      zipCode: document.getElementById('edit-zip').value.trim(),
+      country: document.getElementById('edit-country').value.trim()
+    };
+    if (applicantInfo.isNaturalPerson) {
+      applicantInfo.naturalPersonDetails = {
+        firstName: document.getElementById('edit-first').value.trim(),
+        lastName: document.getElementById('edit-last').value.trim()
+      };
+    }
+    updateApplicantDisplay();
+    updatePreview();
+    editForm.style.display = 'none';
+  });
+}
