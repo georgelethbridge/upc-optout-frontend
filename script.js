@@ -345,17 +345,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const successIcon = copyRequestJsonButton.querySelector('.success-icon');
     
     copyRequestJsonButton.addEventListener('click', () => {
-      console.log('Copy button clicked');
       if (requestBodyDisplay.textContent) {
         navigator.clipboard.writeText(requestBodyDisplay.textContent)
           .then(() => {
-            // Hide copy icon, show success icon
             copyIcon.style.display = 'none';
-            successIcon.style.display = 'inline-block';
+            successIcon.style.display = 'block';
             
-            // Reset after 2 seconds
             setTimeout(() => {
-              copyIcon.style.display = 'inline-block';
+              copyIcon.style.display = 'block';
               successIcon.style.display = 'none';
             }, 2000);
           })
