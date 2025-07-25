@@ -404,3 +404,23 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Copy button not found');
   }
 });
+const allowedEmails = ["you@example.com", "colleague@example.com"];
+
+window.handleCredentialResponse = async (response) => {
+  const { credential } = response;
+
+  const backendRes = await fetch('https://upc-optout-backend.onrender.com/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: credential })
+  });
+
+  const result = await backendRes.json();
+  if (result.allowed) {
+    alert(`Welcome, ${result.email}`);
+    // Optionally store session info
+    sessionStorage.setItem('userEmail', result.email);
+  } else {
+    alert('Access denied');
+  }
+};
