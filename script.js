@@ -6,11 +6,13 @@ const applicantSummary = document.getElementById('applicant-summary');
 const submitButton = document.getElementById('submit');
 const appPdfBase64Display = document.getElementById('app-pdf-base64');
 const mandatePdfBase64Display = document.getElementById('mandate-pdf-base64');
+const requestBodyDisplay = document.getElementById('request-json');
 
 let extractedEPs = [];
 let applicationPDF = null;
 let mandatePDF = null;
 let applicantInfo = {};
+let applicationPdfBase64 = "";
 let hasParsedAddress = false;
 
 function readFileAsBase64(file, callback) {
@@ -26,7 +28,6 @@ function extractFromSpreadsheet(file) {
     const workbook = XLSX.read(data, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    console.log('Parsed rows from spreadsheet:', rows);
     if (!rows.length || !Array.isArray(rows[0])) {
       alert('Spreadsheet headers are malformed.');
       return;
@@ -118,63 +119,49 @@ document.getElementById('person-type').addEventListener('change', () => {
   updatePreview();
 });
 
-document.getElementById('edit-applicant').addEventListener('click', () => {
-  const form = document.getElementById('applicant-edit-form');
-  const isNatural = applicantInfo.isNaturalPerson;
-
-  document.getElementById('edit-name').value = applicantInfo.name;
-  document.getElementById('edit-address').value = applicantInfo.address.address;
-  document.getElementById('edit-city').value = applicantInfo.address.city;
-  document.getElementById('edit-zip').value = applicantInfo.address.zipCode;
-  document.getElementById('edit-country').value = applicantInfo.address.country;
-
-  if (isNatural && applicantInfo.naturalPersonDetails) {
-    document.getElementById('name-split-fields').style.display = 'block';
-    document.getElementById('edit-first').value = applicantInfo.naturalPersonDetails.firstName;
-    document.getElementById('edit-last').value = applicantInfo.naturalPersonDetails.lastName;
-  } else {
-    document.getElementById('name-split-fields').style.display = 'none';
-  }
-
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-});
-
-document.getElementById('save-applicant').addEventListener('click', () => {
-  applicantInfo.name = document.getElementById('edit-name').value;
-  applicantInfo.address = {
-    address: document.getElementById('edit-address').value,
-    city: document.getElementById('edit-city').value,
-    zipCode: document.getElementById('edit-zip').value,
-    country: document.getElementById('edit-country').value
-  };
-
-  if (applicantInfo.isNaturalPerson) {
-    applicantInfo.naturalPersonDetails = {
-      firstName: document.getElementById('edit-first').value,
-      lastName: document.getElementById('edit-last').value
-    };
-  }
-
-  updateApplicantDisplay();
-  updatePreview();
-  document.getElementById('applicant-edit-form').style.display = 'none';
-});
-
 function updatePreview() {
   const initials = document.getElementById('initials').value.trim();
-  const mandator = document.getElementById('mandator_json').value;
+  // const mandator = document.getElementById('mandator_json').value;
+  const ep = extractedEPs[0];
+  const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
 
-  const payloads = extractedEPs.map(ep => ({
-    initials,
-    ep_number: ep,
-    applicant: applicantInfo,
-    mandator: mandator ? JSON.parse(mandator) : undefined
-  }));
-  preview.textContent = JSON.stringify(payloads, null, 2);
+  const basePayload = {
+    statusPersonLodgingApplication: status,
+    internalReference: ep,
+    applicant: {
+      isNaturalPerson: applicantInfo.isNaturalPerson,
+      contactAddress: applicantInfo.address,
+      ...(applicantInfo.isNaturalPerson ? {
+        naturalPersonDetails: applicantInfo.naturalPersonDetails
+      } : {
+        legalEntityDetails: { name: applicantInfo.name }
+      })
+    },
+    patent: {
+      patentNumber: ep
+    },
+    documents: [
+      {
+        documentType: 'Application',
+        documentTitle: `Opt-out ${ep}`,
+        documentDescription: `Opt-out application for ${ep}`,
+        attachments: [
+          {
+            data: applicationPdfBase64,
+            language: 'en',
+            filename: `Optout_${ep}.pdf`,
+            mimeType: 'application/pdf'
+          }
+        ]
+      }
+    ]
+  };
+
+  requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
 }
 
 document.getElementById('initials').addEventListener('input', updatePreview);
-document.getElementById('mandator_json').addEventListener('input', updatePreview);
+// document.getElementById('mandator_json').addEventListener('input', updatePreview);
 
 document.getElementById('spreadsheet').addEventListener('change', e => {
   if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
@@ -184,6 +171,8 @@ document.getElementById('application_pdf').addEventListener('change', e => {
   applicationPDF = e.target.files[0];
   readFileAsBase64(applicationPDF, base64 => {
     appPdfBase64Display.textContent = base64;
+    applicationPdfBase64 = base64;
+    updatePreview();
   });
 });
 
@@ -196,7 +185,7 @@ document.getElementById('mandate_pdf').addEventListener('change', e => {
 
 submitButton.addEventListener('click', async () => {
   const initials = document.getElementById('initials').value.trim();
-  const mandator = document.getElementById('mandator_json').value;
+  // const mandator = document.getElementById('mandator_json').value;
 
   if (!applicationPDF || !initials || !applicantInfo.name) {
     alert('Initials, applicant info and application PDF are required.');
@@ -217,7 +206,7 @@ submitButton.addEventListener('click', async () => {
         placeOfBusiness: applicantInfo.address.country
       } : undefined
     }));
-    if (mandator) formData.append('mandator', mandator);
+    // if (mandator) formData.append('mandator', mandator);
     formData.append('application_pdf', applicationPDF);
     if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
 
