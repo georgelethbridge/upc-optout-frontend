@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   }
 
+  // Update the extractFromSpreadsheet function
   function extractFromSpreadsheet(file) {
     console.log('Starting to extract from spreadsheet:', file.name);
     const reader = new FileReader();
@@ -102,14 +103,27 @@ document.addEventListener('DOMContentLoaded', () => {
           }).then(res => res.json()) : Promise.resolve(null)
         ]);
         console.log('API responses:', { addrRes, nameRes });
-  
+
+        // Ensure the country is set as state
+        const addressData = {
+          ...addrRes,
+          state: addrRes.country || addrRes.state || ''  // Prioritize country as state
+        };
+
         applicantInfo = {
           isNaturalPerson: isNatural,
           name,
-          address: addrRes,
+          address: addressData,
           naturalPersonDetails: nameRes || undefined
         };
         console.log('Updated applicantInfo:', applicantInfo);
+
+        // Display extracted EPs
+        if (epList) {
+          epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p>
+            <ul>${extractedEPs.map(ep => `<li>${ep}</li>`).join('')}</ul>`;
+        }
+
       } catch (err) {
         console.error('API error:', err);
         alert('Failed to parse address or name');
