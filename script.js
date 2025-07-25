@@ -1,14 +1,4 @@
 // script.js
-const epList = document.getElementById('ep-list');
-const preview = document.getElementById('preview');
-const result = document.getElementById('result');
-const applicantSummary = document.getElementById('applicant-summary');
-const submitButton = document.getElementById('submit');
-const appPdfBase64Display = document.getElementById('app-pdf-base64');
-const mandatePdfBase64Display = document.getElementById('mandate-pdf-base64');
-const requestBodyDisplay = document.getElementById('request-json');
-const copyRequestJsonButton = document.getElementById('copy-request-json');
-
 let extractedEPs = [];
 let applicationPDF = null;
 let mandatePDF = null;
@@ -114,14 +104,6 @@ function updateApplicantDisplay() {
   applicantSummary.innerHTML = html;
 }
 
-document.getElementById('person-type').addEventListener('change', () => {
-  applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
-  updateApplicantDisplay();
-  updatePreview();
-});
-
-document.getElementById('initials').addEventListener('input', updatePreview);
-
 function updatePreview() {
   const initials = document.getElementById('initials').value.trim();
   const ep = extractedEPs[0];
@@ -162,80 +144,102 @@ function updatePreview() {
   requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
 }
 
-document.getElementById('spreadsheet').addEventListener('change', e => {
-  if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
-});
-
-document.getElementById('application_pdf').addEventListener('change', e => {
-  applicationPDF = e.target.files[0];
-  readFileAsBase64(applicationPDF, base64 => {
-    appPdfBase64Display.textContent = base64;
-    applicationPdfBase64 = base64;
-    updatePreview();
-  });
-});
-
-document.getElementById('mandate_pdf').addEventListener('change', e => {
-  mandatePDF = e.target.files[0];
-  readFileAsBase64(mandatePDF, base64 => {
-    mandatePdfBase64Display.textContent = base64;
-  });
-});
-
-submitButton.addEventListener('click', async () => {
-  const initials = document.getElementById('initials').value.trim();
-
-  if (!applicationPDF || !initials || !applicantInfo.name) {
-    alert('Initials, applicant info and application PDF are required.');
-    return;
-  }
-
-  for (const ep of extractedEPs) {
-    const formData = new FormData();
-    formData.append('initials', initials);
-    formData.append('ep_number', ep);
-    formData.append('applicant', JSON.stringify({
-      isNaturalPerson: applicantInfo.isNaturalPerson,
-      contactAddress: applicantInfo.address,
-      email: 'placeholder@example.com',
-      naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
-      legalEntityDetails: !applicantInfo.isNaturalPerson ? {
-        name: applicantInfo.name,
-        placeOfBusiness: applicantInfo.address.country
-      } : undefined
-    }));
-    formData.append('application_pdf', applicationPDF);
-    if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
-
-    const response = await fetch('https://upc-optout-api.onrender.com/submit', {
-      method: 'POST',
-      body: formData
-    });
-
-    const resJson = await response.json();
-    const status = response.ok ? '✅' : '❌';
-    result.innerHTML += `<p>${status} ${ep}: ${resJson.requestId || resJson.error}</p>`;
-  }
-});
 
 function showSpinner(show) {
   document.getElementById('spinner').style.display = show ? 'block' : 'none';
 };
 
-if (copyRequestJsonButton) {
-  copyRequestJsonButton.addEventListener('click', () => {
-    if (requestBodyDisplay.textContent) {
-      navigator.clipboard.writeText(requestBodyDisplay.textContent)
-        .then(() => alert('Copied to clipboard!'))
-        .catch(err => console.error('Failed to copy:', err));
-    }
-  });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+  const epList = document.getElementById('ep-list');
+  const preview = document.getElementById('preview');
+  const result = document.getElementById('result');
+  const applicantSummary = document.getElementById('applicant-summary');
+  const submitButton = document.getElementById('submit');
+  const appPdfBase64Display = document.getElementById('app-pdf-base64');
+  const mandatePdfBase64Display = document.getElementById('mandate-pdf-base64');
+  const requestBodyDisplay = document.getElementById('request-json');
+  const copyRequestJsonButton = document.getElementById('copy-request-json');
   const editBtn = document.getElementById('edit-applicant');
   const saveBtn = document.getElementById('save-applicant');
   const editForm = document.getElementById('applicant-edit-form');
+
+  document.getElementById('person-type').addEventListener('change', () => {
+    applicantInfo.isNaturalPerson = document.getElementById('person-type').value === 'true';
+    updateApplicantDisplay();
+    updatePreview();
+  });
+
+  document.getElementById('initials').addEventListener('input', updatePreview);
+  
+  document.getElementById('spreadsheet').addEventListener('change', e => {
+    if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
+  });
+
+  document.getElementById('application_pdf').addEventListener('change', e => {
+    applicationPDF = e.target.files[0];
+    readFileAsBase64(applicationPDF, base64 => {
+      appPdfBase64Display.textContent = base64;
+      applicationPdfBase64 = base64;
+      updatePreview();
+    });
+  });
+
+  document.getElementById('mandate_pdf').addEventListener('change', e => {
+    mandatePDF = e.target.files[0];
+    readFileAsBase64(mandatePDF, base64 => {
+      mandatePdfBase64Display.textContent = base64;
+    });
+  });
+
+  if (submitButton) {
+
+    submitButton.addEventListener('click', async () => {
+      const initials = document.getElementById('initials').value.trim();
+
+      if (!applicationPDF || !initials || !applicantInfo.name) {
+        alert('Initials, applicant info and application PDF are required.');
+        return;
+      }
+
+      for (const ep of extractedEPs) {
+        const formData = new FormData();
+        formData.append('initials', initials);
+        formData.append('ep_number', ep);
+        formData.append('applicant', JSON.stringify({
+          isNaturalPerson: applicantInfo.isNaturalPerson,
+          contactAddress: applicantInfo.address,
+          email: 'placeholder@example.com',
+          naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
+          legalEntityDetails: !applicantInfo.isNaturalPerson ? {
+            name: applicantInfo.name,
+            placeOfBusiness: applicantInfo.address.country
+          } : undefined
+        }));
+        formData.append('application_pdf', applicationPDF);
+        if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
+
+        const response = await fetch('https://upc-optout-api.onrender.com/submit', {
+          method: 'POST',
+          body: formData
+        });
+
+        const resJson = await response.json();
+        const status = response.ok ? '✅' : '❌';
+        result.innerHTML += `<p>${status} ${ep}: ${resJson.requestId || resJson.error}</p>`;
+      }
+    });
+
+  }
+
+  if (copyRequestJsonButton) {
+    copyRequestJsonButton.addEventListener('click', () => {
+      if (requestBodyDisplay.textContent) {
+        navigator.clipboard.writeText(requestBodyDisplay.textContent)
+          .then(() => alert('Copied to clipboard!'))
+          .catch(err => console.error('Failed to copy:', err));
+      }
+    });
+  }
 
   if (editBtn && saveBtn) {
     editBtn.addEventListener('click', () => {
