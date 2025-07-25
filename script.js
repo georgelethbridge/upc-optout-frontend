@@ -4,12 +4,20 @@ const preview = document.getElementById('preview');
 const result = document.getElementById('result');
 const applicantSummary = document.getElementById('applicant-summary');
 const submitButton = document.getElementById('submit');
+const appPdfBase64Display = document.getElementById('app-pdf-base64');
+const mandatePdfBase64Display = document.getElementById('mandate-pdf-base64');
 
 let extractedEPs = [];
 let applicationPDF = null;
 let mandatePDF = null;
 let applicantInfo = {};
 let hasParsedAddress = false;
+
+function readFileAsBase64(file, callback) {
+  const reader = new FileReader();
+  reader.onload = () => callback(reader.result.split(',')[1]);
+  reader.readAsDataURL(file);
+}
 
 function extractFromSpreadsheet(file) {
   const reader = new FileReader();
@@ -174,10 +182,16 @@ document.getElementById('spreadsheet').addEventListener('change', e => {
 
 document.getElementById('application_pdf').addEventListener('change', e => {
   applicationPDF = e.target.files[0];
+  readFileAsBase64(applicationPDF, base64 => {
+    appPdfBase64Display.textContent = base64;
+  });
 });
 
 document.getElementById('mandate_pdf').addEventListener('change', e => {
   mandatePDF = e.target.files[0];
+  readFileAsBase64(mandatePDF, base64 => {
+    mandatePdfBase64Display.textContent = base64;
+  });
 });
 
 submitButton.addEventListener('click', async () => {
