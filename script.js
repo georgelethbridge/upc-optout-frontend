@@ -303,10 +303,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const mandatePdfInput = document.getElementById('mandate_pdf');
   if (mandatePdfInput) {
-    readFileAsBase64(mandatePDF, base64 => {
-      mandatePdfBase64Display.textContent = base64;
-      mandatePdfBase64 = base64;  // <-- ADD THIS
-      updatePreview();            // ensure the preview refreshes if mandate is added
+    mandatePdfInput.addEventListener('change', e => {
+      mandatePDF = e.target.files[0];
+      readFileAsBase64(mandatePDF, base64 => {
+        mandatePdfBase64Display.textContent = base64;
+        mandatePdfBase64 = base64;
+        updatePreview(); // make sure it gets re-rendered
+      });
     });
   }
 
