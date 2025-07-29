@@ -52,74 +52,93 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the preview function to include state in the payload
   function updatePreview() {
     const initials = document.getElementById('initials').value.trim();
-    const ep = extractedEPs[0];
     const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
 
-    const basePayload = {
-      statusPersonLodgingApplication: status,
-      internalReference: ep,
-      applicant: {
-        isNaturalPerson: applicantInfo.isNaturalPerson,
-        contactAddress: {
-          address: applicantInfo.address?.address || '',
-          city: applicantInfo.address?.city || '',
-          zipCode: applicantInfo.address?.zipCode || '',
-          state: applicantInfo.address?.state || ''
+    const requestContainer = document.getElementById('request-json');
+    requestContainer.innerHTML = '';
+
+    const gridWrapper = document.createElement('div');
+    gridWrapper.style.display = 'grid';
+    gridWrapper.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+    gridWrapper.style.gap = '1rem';
+
+    extractedEPs.forEach(ep => {
+      const basePayload = {
+        statusPersonLodgingApplication: status,
+        internalReference: ep,
+        applicant: {
+          isNaturalPerson: applicantInfo.isNaturalPerson,
+          contactAddress: {
+            address: applicantInfo.address?.address || '',
+            city: applicantInfo.address?.city || '',
+            zipCode: applicantInfo.address?.zipCode || '',
+            state: applicantInfo.address?.state || ''
+          },
+          ...(applicantInfo.isNaturalPerson ? {
+            naturalPersonDetails: applicantInfo.naturalPersonDetails
+          } : {
+            legalEntityDetails: {
+              name: applicantInfo.name
+            }
+          })
         },
-        ...(applicantInfo.isNaturalPerson ? {
-          naturalPersonDetails: applicantInfo.naturalPersonDetails
-        } : {
-          legalEntityDetails: {
-            name: applicantInfo.name
+        patent: {
+          patentNumber: ep
+        },
+        documents: [
+          {
+            documentType: 'Application',
+            documentTitle: `Opt-out ${ep}`,
+            documentDescription: `Opt-out application for ${ep}`,
+            attachments: [
+              {
+                data: applicationPdfBase64,
+                language: 'en',
+                filename: `Optout_${ep}.pdf`,
+                mimeType: 'application/pdf'
+              }
+            ]
           }
-        })
-      },
-      patent: {
-        patentNumber: ep
-      },
-      documents: [
-        {
-          documentType: 'Application',
-          documentTitle: `Opt-out ${ep}`,
-          documentDescription: `Opt-out application for ${ep}`,
-          attachments: [
-            {
-              data: applicationPdfBase64,
-              language: 'en',
-              filename: `Optout_${ep}.pdf`,
-              mimeType: 'application/pdf'
-            }
-          ]
+        ]
+      };
+
+      const mandatorSection = document.getElementById('mandator-section');
+      if (status === 'NotARegisteredRepresentativeBeforeTheUPC') {
+        mandatorSection?.classList.remove('hidden');
+        const mandator = getMandator();
+        if (mandator) basePayload.mandator = mandator;
+
+        if (mandatePdfBase64) {
+          basePayload.documents.push({
+            documentType: 'Mandate',
+            documentTitle: 'Mandate Form',
+            documentDescription: `Mandate for ${ep}`,
+            attachments: [
+              {
+                data: mandatePdfBase64,
+                language: 'en',
+                filename: `Optout_mandate_${ep}.pdf`,
+                mimeType: 'application/pdf'
+              }
+            ]
+          });
         }
-      ]
-    };
-
-    const mandatorSection = document.getElementById('mandator-section');
-    if (status === 'NotARegisteredRepresentativeBeforeTheUPC') {
-      mandatorSection?.classList.remove('hidden');
-      const mandator = getMandator();
-      if (mandator) basePayload.mandator = mandator;
-
-      if (mandatePdfBase64) {
-        basePayload.documents.push({
-          documentType: 'Mandate',
-          documentTitle: 'Mandate Form',
-          documentDescription: `Mandate for ${ep}`,
-          attachments: [
-            {
-              data: mandatePdfBase64,
-              language: 'en',
-              filename: `Optout_mandate_${ep}.pdf`,
-              mimeType: 'application/pdf'
-            }
-          ]
-        });
+      } else {
+        mandatorSection?.classList.add('hidden');
       }
-    } else {
-      mandatorSection?.classList.add('hidden');
-    }
 
-    requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
+      const pre = document.createElement('pre');
+      pre.style.whiteSpace = 'pre-wrap';
+      pre.style.background = '#f9f9f9';
+      pre.style.border = '1px solid #ccc';
+      pre.style.padding = '1em';
+      pre.style.overflow = 'auto';
+      pre.textContent = JSON.stringify(basePayload, null, 2);
+
+      gridWrapper.appendChild(pre);
+    });
+
+    requestContainer.appendChild(gridWrapper);
   }
 
   // Hook to show/hide Mandator section on initials input
