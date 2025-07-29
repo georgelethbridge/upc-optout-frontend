@@ -144,70 +144,41 @@ button#submit:hover {
 
 .main-layout {
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
+  padding: 1rem 2rem;
   gap: 2rem;
-  margin: 2rem;
 }
 
-.form-column {
-  flex: 2;
-  max-width: 700px;
-}
-
-.preview-column {
-  flex: 1;
-  min-width: 300px;
-  max-width: 500px;
-}
-
-.pdf-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-  margin-top: 1rem;
-}
-
-.pdf-container {
-  flex: 1 1 500px;
+.form-section {
+  flex: 1 1 45%;
   max-width: 600px;
 }
 
-.pdf-container label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 0.5rem;
+.preview-section {
+  flex: 1 1 55%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.preview-box {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  max-height: 700px;
+  overflow: auto;
 }
 
 .pdf-preview {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  background: white;
-  height: auto;
   width: 100%;
-  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  height: 650px;
+  overflow: auto;
+  border: 1px solid #ccc;
 }
 
 .pdf-preview embed {
   width: 100%;
-  height: 600px;
+  height: 100%;
   object-fit: contain;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
-
-
-.main-container {
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.form-area {
-  flex: 1 1 400px;
-}
-
-.preview-area {
-  flex: 0 0 600px;
-}
-
