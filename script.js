@@ -235,6 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const epIndex = headers.findIndex(h => (h || '').includes('ep pub'));
       const nameIndex = headers.findIndex(h => (h || '').includes('owner 1 name'));
       const addrIndex = headers.findIndex(h => (h || '').includes('owner 1 address'));
+      const emailIndex = headers.findIndex(h => (h || '').includes('owner 1 email'));
+
       console.log('Found indices:', { epIndex, nameIndex, addrIndex });
   
       if (epIndex === -1 || nameIndex === -1 || addrIndex === -1) {
@@ -251,6 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
       const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
       console.log('Extracted name and address:', { name, addressFull });
+      const email = rows[headerRowIndex + 1]?.[emailIndex]?.trim() || '';
+
   
       const isNatural = document.getElementById('person-type').value === 'true';
       showSpinner(true);
@@ -280,7 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
           isNaturalPerson: isNatural,
           name,
           address: addressData,
-          naturalPersonDetails: nameRes || undefined
+          naturalPersonDetails: nameRes || undefined,
+          email: email || undefined
+
         };
         console.log('Updated applicantInfo:', applicantInfo);
 
