@@ -80,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             legalEntityDetails: {
               name: applicantInfo.name
             }
-          })
+          }),
+          ...(applicantInfo.email ? { email: applicantInfo.email } : {})
         },
         patent: {
           patentNumber: ep
@@ -127,20 +128,45 @@ document.addEventListener('DOMContentLoaded', () => {
         mandatorSection?.classList.add('hidden');
       }
 
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      container.style.border = '1px solid #ccc';
+      container.style.background = '#f9f9f9';
+      container.style.padding = '1em';
+      container.style.overflow = 'auto';
+
       const pre = document.createElement('pre');
       pre.style.whiteSpace = 'pre-wrap';
-      pre.style.background = '#f9f9f9';
-      pre.style.border = '1px solid #ccc';
-      pre.style.padding = '1em';
-      pre.style.overflow = 'auto';
+      pre.style.margin = 0;
       pre.textContent = JSON.stringify(basePayload, null, 2);
 
-      gridWrapper.appendChild(pre);
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = 'Copy';
+      copyBtn.style.position = 'absolute';
+      copyBtn.style.top = '0.5rem';
+      copyBtn.style.right = '0.5rem';
+      copyBtn.style.cursor = 'pointer';
+      copyBtn.style.fontSize = '0.8rem';
+      copyBtn.style.padding = '0.25rem 0.5rem';
+
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(pre.textContent)
+          .then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy';
+            }, 1500);
+          })
+          .catch(err => console.error('Copy failed', err));
+      });
+
+      container.appendChild(copyBtn);
+      container.appendChild(pre);
+      gridWrapper.appendChild(container);
     });
 
     requestContainer.appendChild(gridWrapper);
   }
-
   // Hook to show/hide Mandator section on initials input
   const initialsField = document.getElementById('initials');
   if (initialsField) {
