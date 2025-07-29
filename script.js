@@ -378,16 +378,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (applicationPdfInput) {
     applicationPdfInput.addEventListener('change', e => {
       applicationPDF = e.target.files[0];
+
       readFileAsBase64(applicationPDF, base64 => {
-        appPdfBase64Display.textContent = base64;
         applicationPdfBase64 = base64;
+        appPdfBase64Display.textContent = base64;
         updatePreview();
       });
 
+      // --- Preview in <embed> ---
       const preview = document.getElementById('application-preview');
-      if (preview) {
-        const url = URL.createObjectURL(applicationPDF);
-        preview.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="400px" />`;
+      if (preview && applicationPDF) {
+        preview.innerHTML = '';  // Clear previous content
+
+        const objectURL = URL.createObjectURL(applicationPDF);
+        preview.innerHTML = `<embed src="${objectURL}" type="application/pdf" width="100%" height="600px">`;
       }
     });
   }
