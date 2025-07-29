@@ -73,7 +73,7 @@
       <input type="file" id="application_pdf" accept="application/pdf" required />
     </section>
 
-    <section>
+    <section class="hidden">
       <label>Application PDF (Base64):</label>
       <textarea id="app-pdf-base64" readonly></textarea>
     </section>
@@ -84,12 +84,13 @@
         <div id="mandate-drop" class="drop-zone">Drop mandate PDF here</div>
         <input type="file" id="mandate_pdf" accept="application/pdf" />
       </section>
+    </section>
 
-      <section>
+
+      <section class="hidden">
         <label>Mandate PDF (Base64):</label>
         <textarea id="mandate-pdf-base64" readonly></textarea>
       </section>
-    </section>
 
     <section>
       <label for="person-type">Applicant Type:</label>
