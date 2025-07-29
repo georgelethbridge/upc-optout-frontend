@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let applicantInfo = {};
   let applicationPdfBase64 = "";
   let hasParsedAddress = false;
+  let mandatePdfBase64 = "";
 
 
   const epList = document.getElementById('ep-list');
@@ -209,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
           address: applicantInfo.address?.address || '',
           city: applicantInfo.address?.city || '',
           zipCode: applicantInfo.address?.zipCode || '',
-          state: applicantInfo.address?.state || ''  // Ensure state is included
+          state: applicantInfo.address?.state || ''
         },
         ...(applicantInfo.isNaturalPerson ? {
           naturalPersonDetails: applicantInfo.naturalPersonDetails
@@ -242,8 +243,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const mandator = getMandator();
     if (mandator) basePayload.mandator = mandator;
 
+    if (mandatePdfBase64) {
+      basePayload.documents.push({
+        documentType: 'Mandate',
+        documentTitle: 'Mandate Form',
+        documentDescription: `Mandate for ${ep}`,
+        attachments: [
+          {
+            data: mandatePdfBase64,
+            language: 'en',
+            filename: `Optout_mandate_${ep}.pdf`,
+            mimeType: 'application/pdf'
+          }
+        ]
+      });
+    }
+
     requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
   }
+
 
   function showSpinner(show) {
     document.getElementById('spinner').style.display = show ? 'block' : 'none';
@@ -285,11 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const mandatePdfInput = document.getElementById('mandate_pdf');
   if (mandatePdfInput) {
-    mandatePdfInput.addEventListener('change', e => {
-      mandatePDF = e.target.files[0];
-      readFileAsBase64(mandatePDF, base64 => {
-        mandatePdfBase64Display.textContent = base64;
-      });
+    readFileAsBase64(mandatePDF, base64 => {
+      mandatePdfBase64Display.textContent = base64;
+      mandatePdfBase64 = base64;  // <-- ADD THIS
+      updatePreview();            // ensure the preview refreshes if mandate is added
     });
   }
 
