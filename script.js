@@ -49,7 +49,86 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+    // Update the preview function to include state in the payload
+  function updatePreview() {
+    const initials = document.getElementById('initials').value.trim();
+    const ep = extractedEPs[0];
+    const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
 
+    const basePayload = {
+      statusPersonLodgingApplication: status,
+      internalReference: ep,
+      applicant: {
+        isNaturalPerson: applicantInfo.isNaturalPerson,
+        contactAddress: {
+          address: applicantInfo.address?.address || '',
+          city: applicantInfo.address?.city || '',
+          zipCode: applicantInfo.address?.zipCode || '',
+          state: applicantInfo.address?.state || ''
+        },
+        ...(applicantInfo.isNaturalPerson ? {
+          naturalPersonDetails: applicantInfo.naturalPersonDetails
+        } : {
+          legalEntityDetails: { 
+            name: applicantInfo.name
+          }
+        })
+      },
+      patent: {
+        patentNumber: ep
+      },
+      documents: [
+        {
+          documentType: 'Application',
+          documentTitle: `Opt-out ${ep}`,
+          documentDescription: `Opt-out application for ${ep}`,
+          attachments: [
+            {
+              data: applicationPdfBase64,
+              language: 'en',
+              filename: `Optout_${ep}.pdf`,
+              mimeType: 'application/pdf'
+            }
+          ]
+        }
+      ]
+    };
+
+    const mandator = getMandator();
+    if (mandator) basePayload.mandator = mandator;
+
+    if (mandatePdfBase64) {
+      basePayload.documents.push({
+        documentType: 'Mandate',
+        documentTitle: 'Mandate Form',
+        documentDescription: `Mandate for ${ep}`,
+        attachments: [
+          {
+            data: mandatePdfBase64,
+            language: 'en',
+            filename: `Optout_mandate_${ep}.pdf`,
+            mimeType: 'application/pdf'
+          }
+        ]
+      });
+    }
+
+    requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
+  }
+  [
+    'mandator-first',
+    'mandator-last',
+    'mandator-email',
+    'mandator-address',
+    'mandator-city',
+    'mandator-zip',
+    'mandator-country'
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', updatePreview);
+    }
+  });
 
 
   function readFileAsBase64(file, callback) {
@@ -195,72 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Update the preview function to include state in the payload
-  function updatePreview() {
-    const initials = document.getElementById('initials').value.trim();
-    const ep = extractedEPs[0];
-    const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
 
-    const basePayload = {
-      statusPersonLodgingApplication: status,
-      internalReference: ep,
-      applicant: {
-        isNaturalPerson: applicantInfo.isNaturalPerson,
-        contactAddress: {
-          address: applicantInfo.address?.address || '',
-          city: applicantInfo.address?.city || '',
-          zipCode: applicantInfo.address?.zipCode || '',
-          state: applicantInfo.address?.state || ''
-        },
-        ...(applicantInfo.isNaturalPerson ? {
-          naturalPersonDetails: applicantInfo.naturalPersonDetails
-        } : {
-          legalEntityDetails: { 
-            name: applicantInfo.name
-          }
-        })
-      },
-      patent: {
-        patentNumber: ep
-      },
-      documents: [
-        {
-          documentType: 'Application',
-          documentTitle: `Opt-out ${ep}`,
-          documentDescription: `Opt-out application for ${ep}`,
-          attachments: [
-            {
-              data: applicationPdfBase64,
-              language: 'en',
-              filename: `Optout_${ep}.pdf`,
-              mimeType: 'application/pdf'
-            }
-          ]
-        }
-      ]
-    };
-
-    const mandator = getMandator();
-    if (mandator) basePayload.mandator = mandator;
-
-    if (mandatePdfBase64) {
-      basePayload.documents.push({
-        documentType: 'Mandate',
-        documentTitle: 'Mandate Form',
-        documentDescription: `Mandate for ${ep}`,
-        attachments: [
-          {
-            data: mandatePdfBase64,
-            language: 'en',
-            filename: `Optout_mandate_${ep}.pdf`,
-            mimeType: 'application/pdf'
-          }
-        ]
-      });
-    }
-
-    requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
-  }
 
 
   function showSpinner(show) {
@@ -478,17 +492,3 @@ window.handleCredentialResponse = async (response) => {
   }
 };
 
-[
-  'mandator-first',
-  'mandator-last',
-  'mandator-email',
-  'mandator-address',
-  'mandator-city',
-  'mandator-zip',
-  'mandator-country'
-].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener('input', updatePreview);
-  }
-});
