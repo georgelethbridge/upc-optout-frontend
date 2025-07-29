@@ -22,6 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveBtn = document.getElementById('save-applicant');
   const editForm = document.getElementById('applicant-edit-form');
 
+  function getMandator() {
+  const name = document.getElementById('mandator-name')?.value.trim();
+  const email = document.getElementById('mandator-email')?.value.trim();
+  const country = document.getElementById('mandator-country')?.value.trim();
+  if (!name && !email && !country) return null;
+  return {
+    name,
+    email,
+    contactAddress: { state: country }
+  };
+}
+
+
 
   function readFileAsBase64(file, callback) {
     const reader = new FileReader();
@@ -211,6 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     };
 
+    const mandator = getMandator();
+    if (mandator) basePayload.mandator = mandator;
+
     requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
   }
 
@@ -271,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Initials, applicant info and application PDF are required.');
         return;
       }
+      const mandator = getMandator();
 
       for (const ep of extractedEPs) {
         const formData = new FormData();
@@ -286,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // placeOfBusiness: applicantInfo.address.state // Optional field - commented out
           } : undefined
         }));
+        if (mandator) formData.append('mandator', JSON.stringify(mandator));
         formData.append('application_pdf', applicationPDF);
         if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
 

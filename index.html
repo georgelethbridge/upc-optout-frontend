@@ -77,7 +77,7 @@
       <label>Application PDF (Base64):</label>
       <textarea id="app-pdf-base64" readonly></textarea>
     </section>
-    <!--
+    
     <section>
       <label>Drop Mandate PDF (if applicable)</label>
       <div id="mandate-drop" class="drop-zone">Drop mandate PDF here</div>
@@ -87,7 +87,7 @@
     <section>
       <label>Mandate PDF (Base64):</label>
       <textarea id="mandate-pdf-base64" readonly></textarea>
-    </section> -->
+    </section>
 
     <section>
       <label for="person-type">Applicant Type:</label>
@@ -116,11 +116,16 @@
         <button id="save-applicant">Save</button>
       </div>
     </section>
-<!-- 
+
     <section>
-      <label for="mandator_json">Mandator JSON (if needed):</label>
-      <textarea id="mandator_json"></textarea>
-    </section> -->
+      <label>Mandator Details (if required):</label>
+      <div class="mandator-form">
+        <label>Name: <input type="text" id="mandator-name" /></label><br />
+        <label>Email: <input type="email" id="mandator-email" /></label><br />
+        <label>Country: <input type="text" id="mandator-country" /></label><br />
+      </div>
+    </section>
+
 
     <section>
       <label for="preview">Preview JSON Payload:</label>
