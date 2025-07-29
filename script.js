@@ -379,6 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
         applicationPdfBase64 = base64;
         updatePreview();
       });
+
+      const preview = document.getElementById('application-preview');
+      if (preview) {
+        const url = URL.createObjectURL(applicationPDF);
+        preview.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="400px" />`;
+      }
     });
   }
 
@@ -389,8 +395,14 @@ document.addEventListener('DOMContentLoaded', () => {
       readFileAsBase64(mandatePDF, base64 => {
         mandatePdfBase64Display.textContent = base64;
         mandatePdfBase64 = base64;
-        updatePreview(); // make sure it gets re-rendered
+        updatePreview();
       });
+
+      const preview = document.getElementById('mandate-preview');
+      if (preview) {
+        const url = URL.createObjectURL(mandatePDF);
+        preview.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="400px" />`;
+      }
     });
   }
 
