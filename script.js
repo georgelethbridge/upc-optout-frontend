@@ -141,20 +141,21 @@ document.addEventListener('DOMContentLoaded', () => {
       pre.textContent = JSON.stringify(basePayload, null, 2);
 
       const copyBtn = document.createElement('button');
-      copyBtn.textContent = 'Copy';
+      copyBtn.innerHTML = '<img src="copy-icon.svg" alt="Copy" width="16" height="16">';
       copyBtn.style.position = 'absolute';
       copyBtn.style.top = '0.5rem';
       copyBtn.style.right = '0.5rem';
       copyBtn.style.cursor = 'pointer';
-      copyBtn.style.fontSize = '0.8rem';
-      copyBtn.style.padding = '0.25rem 0.5rem';
+      copyBtn.style.background = 'transparent';
+      copyBtn.style.border = 'none';
+      copyBtn.style.padding = 0;
 
       copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(pre.textContent)
           .then(() => {
-            copyBtn.textContent = 'Copied!';
+            copyBtn.innerHTML = '<img src="check-icon.svg" alt="Copied" width="16" height="16">';
             setTimeout(() => {
-              copyBtn.textContent = 'Copy';
+              copyBtn.innerHTML = '<img src="copy-icon.svg" alt="Copy" width="16" height="16">';
             }, 1500);
           })
           .catch(err => console.error('Copy failed', err));
