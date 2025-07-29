@@ -51,141 +51,142 @@
      data-auto_prompt="false">
 </div>
 <div class="g_id_signin" data-type="standard"></div>
-  <div class="main-layout">
-   <div class="form-column">
-
     <div class="container">
       <h1>UPC Opt-Out Filing Tool</h1>
 
-      <section>
-        <label for="initials">Filing User Initials:</label>
-        <input type="text" id="initials" placeholder="" required />
-      </section>
+        <div class="main-layout">
+          <div class="form-column">
+            <section>
+              <label for="initials">Filing User Initials:</label>
+              <input type="text" id="initials" placeholder="" required />
+            </section>
 
-      <section>
-        <label>Drop Spreadsheet (.xlsx) Below</label>
-        <div id="spreadsheet-drop" class="drop-zone">Drop spreadsheet here</div>
-        <input type="file" id="spreadsheet" accept=".xlsx" />
-        <div id="ep-list"></div>
-      </section>
+            <section>
+              <label>Drop Spreadsheet (.xlsx) Below</label>
+              <div id="spreadsheet-drop" class="drop-zone">Drop spreadsheet here</div>
+              <input type="file" id="spreadsheet" accept=".xlsx" />
+              <div id="ep-list"></div>
+            </section>
 
-      <section>
-        <label>Drop Application PDF (Signed)</label>
-        <div id="application-drop" class="drop-zone">Drop signed application PDF here</div>
-        <input type="file" id="application_pdf" accept="application/pdf" required />
-      </section>
+            <section>
+              <label>Drop Application PDF (Signed)</label>
+              <div id="application-drop" class="drop-zone">Drop signed application PDF here</div>
+              <input type="file" id="application_pdf" accept="application/pdf" required />
+            </section>
 
-      <section class="hidden">
-        <label>Application PDF (Base64):</label>
-        <textarea id="app-pdf-base64" readonly></textarea>
-      </section>
-      
-      <section id="mandator-section" class="hidden">
-        <section>
-          <label>Drop Mandate PDF</label>
-          <div id="mandate-drop" class="drop-zone">Drop mandate PDF here</div>
-          <input type="file" id="mandate_pdf" accept="application/pdf" />
-        </section>
-        <section>
-          <h3>Mandator Details</h3>
-          <div class="form-grid">
-            <label>
-              First Name:
-              <input type="text" id="mandator-first" />
-            </label>
-            <label>
-              Last Name:
-              <input type="text" id="mandator-last" />
-            </label>
-            <label>
-              Email:
-              <input type="email" id="mandator-email" />
-            </label>
-            <label>
-              Address Line:
-              <input type="text" id="mandator-address" />
-            </label>
-            <label>
-              City:
-              <input type="text" id="mandator-city" />
-            </label>
-            <label>
-              Zip Code:
-              <input type="text" id="mandator-zip" />
-            </label>
-            <label>
-              Country Code:
-              <input type="text" id="mandator-country" />
-            </label>
+            <section class="hidden">
+              <label>Application PDF (Base64):</label>
+              <textarea id="app-pdf-base64" readonly></textarea>
+            </section>
+            
+            <section id="mandator-section" class="hidden">
+              <section>
+                <label>Drop Mandate PDF</label>
+                <div id="mandate-drop" class="drop-zone">Drop mandate PDF here</div>
+                <input type="file" id="mandate_pdf" accept="application/pdf" />
+              </section>
+              <section>
+                <h3>Mandator Details</h3>
+                <div class="form-grid">
+                  <label>
+                    First Name:
+                    <input type="text" id="mandator-first" />
+                  </label>
+                  <label>
+                    Last Name:
+                    <input type="text" id="mandator-last" />
+                  </label>
+                  <label>
+                    Email:
+                    <input type="email" id="mandator-email" />
+                  </label>
+                  <label>
+                    Address Line:
+                    <input type="text" id="mandator-address" />
+                  </label>
+                  <label>
+                    City:
+                    <input type="text" id="mandator-city" />
+                  </label>
+                  <label>
+                    Zip Code:
+                    <input type="text" id="mandator-zip" />
+                  </label>
+                  <label>
+                    Country Code:
+                    <input type="text" id="mandator-country" />
+                  </label>
+                </div>
+              </section>
+            </section>
+
+
+              <section class="hidden">
+                <label>Mandate PDF (Base64):</label>
+                <textarea id="mandate-pdf-base64" readonly></textarea>
+              </section>
+
+            <section>
+              <label for="person-type">Applicant Type:</label>
+              <select id="person-type">
+                <option value="false">Legal Entity</option>
+                <option value="true">Natural Person</option>
+              </select>
+            </section>
+
+            <section>
+              <label>Applicant Info (from spreadsheet):</label>
+              <div id="spinner" style="display: none;">🔄 Parsing address via GPT...</div>
+              <div id="applicant-summary" class="applicant-summary"></div>
+              <button id="edit-applicant">Edit</button>
+
+              <div id="applicant-edit-form" style="display:none; margin-top:1rem;">
+                <label>Name: <input type="text" id="edit-name" /></label><br />
+                <label>Address Line: <input type="text" id="edit-address" /></label><br />
+                <label>City: <input type="text" id="edit-city" /></label><br />
+                <label>Zip Code: <input type="text" id="edit-zip" /></label><br />
+                <label>State: <input type="text" id="edit-state" /></label><br />
+                <div id="name-split-fields" style="display:none;">
+                  <label>First Name: <input type="text" id="edit-first" /></label><br />
+                  <label>Last Name: <input type="text" id="edit-last" /></label><br />
+                </div>
+                <label>Email: <input type="text" id="edit-email" /></label><br />
+                <button id="save-applicant">Save</button>
+              </div>
+            </section>
+
+            <section style="position: relative;">
+              <label>Final Request JSON:</label>
+              <div class="request-json-container">
+                <pre id="request-json"></pre>
+                <button id="copy-request-json" class="copy-button">
+                  <svg class="copy-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <svg class="success-icon" viewBox="0 0 24 24" width="24" height="24" stroke="#22c55e" stroke-width="2" fill="none" style="display: none;">
+                    <path d="M20 6L9 17l-5-5"></path>
+                  </svg>
+                </button>
+              </div>
+            </section>
+
+            <!-- <button id="submit">Submit Opt-Out Request(s)</button>
+            <div id="result"></div>
+            </div> -->
           </div>
-        </section>
-      </section>
-
-
-        <section class="hidden">
-          <label>Mandate PDF (Base64):</label>
-          <textarea id="mandate-pdf-base64" readonly></textarea>
-        </section>
-
-      <section>
-        <label for="person-type">Applicant Type:</label>
-        <select id="person-type">
-          <option value="false">Legal Entity</option>
-          <option value="true">Natural Person</option>
-        </select>
-      </section>
-
-      <section>
-        <label>Applicant Info (from spreadsheet):</label>
-        <div id="spinner" style="display: none;">🔄 Parsing address via GPT...</div>
-        <div id="applicant-summary" class="applicant-summary"></div>
-        <button id="edit-applicant">Edit</button>
-
-        <div id="applicant-edit-form" style="display:none; margin-top:1rem;">
-          <label>Name: <input type="text" id="edit-name" /></label><br />
-          <label>Address Line: <input type="text" id="edit-address" /></label><br />
-          <label>City: <input type="text" id="edit-city" /></label><br />
-          <label>Zip Code: <input type="text" id="edit-zip" /></label><br />
-          <label>State: <input type="text" id="edit-state" /></label><br />
-          <div id="name-split-fields" style="display:none;">
-            <label>First Name: <input type="text" id="edit-first" /></label><br />
-            <label>Last Name: <input type="text" id="edit-last" /></label><br />
+          
+          <div class="preview-column">
+            <div class="pdf-preview">
+              <div id="application-preview"></div>
+            </div>
+            <div class="pdf-preview">
+              <div id="mandate-preview"></div>
+            </div>
           </div>
-          <label>Email: <input type="text" id="edit-email" /></label><br />
-          <button id="save-applicant">Save</button>
         </div>
-      </section>
-
-      <section style="position: relative;">
-        <label>Final Request JSON:</label>
-        <div class="request-json-container">
-          <pre id="request-json"></pre>
-          <button id="copy-request-json" class="copy-button">
-            <svg class="copy-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            <svg class="success-icon" viewBox="0 0 24 24" width="24" height="24" stroke="#22c55e" stroke-width="2" fill="none" style="display: none;">
-              <path d="M20 6L9 17l-5-5"></path>
-            </svg>
-          </button>
-        </div>
-      </section>
-
-
-
-      <!-- <button id="submit">Submit Opt-Out Request(s)</button>
-      <div id="result"></div>
-    </div> -->
-
-      <div class="preview-column">
-    <h3>PDF Preview</h3>
-      <div id="application-preview" class="pdf-preview"></div>
-      <div id="mandate-preview" class="pdf-preview"></div>
-    </div>
-
-
+    </div>  
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
