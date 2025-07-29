@@ -156,18 +156,22 @@
             </section>
           </div>
           
-          <div class="preview-area">
-            <div class="pdf-preview" id="application-preview-box">
-              <strong>Application</strong>
-              <div id="application-preview"></div>
+          <div class="pdf-grid">
+            <div class="pdf-container">
+              <label>Application</label>
+              <div class="pdf-preview">
+                <embed id="application-preview" type="application/pdf">
+              </div>
             </div>
-
-            <div class="pdf-preview hidden" id="mandate-preview-box">
-              <strong>Mandate</strong>
-              <div id="mandate-preview"></div>
+            <div class="pdf-container hidden" id="mandate-preview-box">
+              <label>Mandate</label>
+              <div class="pdf-preview">
+                <embed id="mandate-preview" type="application/pdf">
+              </div>
             </div>
-          </div>
+          </div>          
         </div>
+      </div>
     </div>  
     <section style="position: relative;">
       <label>Final Request JSON:</label>

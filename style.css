@@ -160,23 +160,39 @@ button#submit:hover {
   max-width: 500px;
 }
 
+.pdf-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.pdf-container {
+  flex: 1 1 500px;
+  max-width: 600px;
+}
+
+.pdf-container label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
 .pdf-preview {
   border: 1px solid #ccc;
-  background: white;
   padding: 0.5rem;
-  width: 100%;
-  max-width: 600px;
+  background: white;
   height: auto;
+  width: 100%;
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
 }
 
 .pdf-preview embed {
   width: 100%;
-  height: 800px; /* Force enough height to show a full page */
+  height: 800px;
   object-fit: contain;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  border: none;
 }
-
 
 .main-container {
   display: flex;
