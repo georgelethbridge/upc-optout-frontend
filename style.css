@@ -117,3 +117,7 @@ button#submit:hover {
   border-radius: 4px;
   white-space: pre-wrap;
 }
+
+.hidden {
+  display: none;
+}

@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ...(applicantInfo.isNaturalPerson ? {
           naturalPersonDetails: applicantInfo.naturalPersonDetails
         } : {
-          legalEntityDetails: { 
+          legalEntityDetails: {
             name: applicantInfo.name
           }
         })
@@ -94,26 +94,38 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     };
 
-    const mandator = getMandator();
-    if (mandator) basePayload.mandator = mandator;
+    const mandatorSection = document.getElementById('mandator-section');
+    if (status === 'NotARegisteredRepresentativeBeforeTheUPC') {
+      mandatorSection?.classList.remove('hidden');
+      const mandator = getMandator();
+      if (mandator) basePayload.mandator = mandator;
 
-    if (mandatePdfBase64) {
-      basePayload.documents.push({
-        documentType: 'Mandate',
-        documentTitle: 'Mandate Form',
-        documentDescription: `Mandate for ${ep}`,
-        attachments: [
-          {
-            data: mandatePdfBase64,
-            language: 'en',
-            filename: `Optout_mandate_${ep}.pdf`,
-            mimeType: 'application/pdf'
-          }
-        ]
-      });
+      if (mandatePdfBase64) {
+        basePayload.documents.push({
+          documentType: 'Mandate',
+          documentTitle: 'Mandate Form',
+          documentDescription: `Mandate for ${ep}`,
+          attachments: [
+            {
+              data: mandatePdfBase64,
+              language: 'en',
+              filename: `Optout_mandate_${ep}.pdf`,
+              mimeType: 'application/pdf'
+            }
+          ]
+        });
+      }
+    } else {
+      mandatorSection?.classList.add('hidden');
     }
 
     requestBodyDisplay.textContent = JSON.stringify(basePayload, null, 2);
+  }
+
+  // Hook to show/hide Mandator section on initials input
+  const initialsField = document.getElementById('initials');
+  if (initialsField) {
+    initialsField.addEventListener('input', updatePreview);
   }
   [
     'mandator-first',
