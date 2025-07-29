@@ -457,3 +457,18 @@ window.handleCredentialResponse = async (response) => {
     alert('Access denied');
   }
 };
+
+[
+  'mandator-first',
+  'mandator-last',
+  'mandator-email',
+  'mandator-address',
+  'mandator-city',
+  'mandator-zip',
+  'mandator-country'
+].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', updatePreview);
+  }
+});
