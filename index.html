@@ -54,8 +54,9 @@
     <div class="container">
       <h1>UPC Opt-Out Filing Tool</h1>
 
-        <div class="main-container">
-          <div class="form-area">
+      <div class="main-layout">
+        <div class="form-column">
+          <div class="container">
             <section>
               <label for="initials">Filing User Initials:</label>
               <input type="text" id="initials" placeholder="" required />
@@ -155,24 +156,21 @@
               </div>
             </section>
           </div>
-          
+        </div>
+        <div class="preview-column">
           <div class="pdf-grid">
             <div class="pdf-container">
               <label>Application</label>
-              <div class="pdf-preview">
-                <embed id="application-preview" type="application/pdf">
-              </div>
+              <div id="application-preview" class="pdf-preview"></div>
             </div>
             <div class="pdf-container hidden" id="mandate-preview-box">
               <label>Mandate</label>
-              <div class="pdf-preview">
-                <embed id="mandate-preview" type="application/pdf">
-              </div>
+              <div id="mandate-preview" class="pdf-preview"></div>
             </div>
-          </div>          
-        </div>
+          </div>
+        </div>          
       </div>
-    </div>  
+    </div>
     <section style="position: relative;">
       <label>Final Request JSON:</label>
       <div class="request-json-container">
