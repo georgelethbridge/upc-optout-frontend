@@ -163,14 +163,16 @@ button#submit:hover {
 .pdf-preview {
   border: 1px solid #ccc;
   margin-bottom: 1rem;
-  width: 100%;
-  aspect-ratio: 8.5 / 11;
   overflow: hidden;
+  max-height: 600px;
+  background: white;
 }
 
 .pdf-preview embed {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: block;
+  border: none;
 }
+
 

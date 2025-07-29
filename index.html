@@ -154,38 +154,40 @@
                 <button id="save-applicant">Save</button>
               </div>
             </section>
-
-            <section style="position: relative;">
-              <label>Final Request JSON:</label>
-              <div class="request-json-container">
-                <pre id="request-json"></pre>
-                <button id="copy-request-json" class="copy-button">
-                  <svg class="copy-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  <svg class="success-icon" viewBox="0 0 24 24" width="24" height="24" stroke="#22c55e" stroke-width="2" fill="none" style="display: none;">
-                    <path d="M20 6L9 17l-5-5"></path>
-                  </svg>
-                </button>
-              </div>
-            </section>
-
-            <!-- <button id="submit">Submit Opt-Out Request(s)</button>
-            <div id="result"></div>
-            </div> -->
           </div>
           
           <div class="preview-column">
-            <div class="pdf-preview">
+            <div class="pdf-preview" id="application-preview-box">
+              <strong>Application</strong>
               <div id="application-preview"></div>
             </div>
-            <div class="pdf-preview">
+
+            <div class="pdf-preview hidden" id="mandate-preview-box">
+              <strong>Mandate</strong>
               <div id="mandate-preview"></div>
             </div>
           </div>
         </div>
     </div>  
+    <section style="position: relative;">
+      <label>Final Request JSON:</label>
+      <div class="request-json-container">
+        <pre id="request-json"></pre>
+        <button id="copy-request-json" class="copy-button">
+          <svg class="copy-icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <svg class="success-icon" viewBox="0 0 24 24" width="24" height="24" stroke="#22c55e" stroke-width="2" fill="none" style="display: none;">
+            <path d="M20 6L9 17l-5-5"></path>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- <button id="submit">Submit Opt-Out Request(s)</button>
+    <div id="result"></div>
+    </div> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
   </body>

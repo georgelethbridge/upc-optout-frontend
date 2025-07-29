@@ -104,8 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       const mandatorSection = document.getElementById('mandator-section');
+      const mandateBox = document.getElementById('mandate-preview-box');
+
       if (status === 'NotARegisteredRepresentativeBeforeTheUPC') {
         mandatorSection?.classList.remove('hidden');
+        mandateBox?.classList.remove('hidden');
         const mandator = getMandator();
         if (mandator) basePayload.mandator = mandator;
 
@@ -126,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         mandatorSection?.classList.add('hidden');
+        mandateBox?.classList.add('hidden');
       }
 
       const container = document.createElement('div');
