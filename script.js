@@ -323,6 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${address.address || ''}<br>
                   ${address.city || ''} ${address.zipCode || ''}<br>
                   ${address.state || ''}`;  // Make sure state is displayed
+      if (applicantInfo.email) {
+        html += `<br><strong>Email:</strong> ${applicantInfo.email}`;
+      }
 
       if (isNaturalPerson && naturalPersonDetails) {
         html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName || ''}<br>
@@ -499,7 +502,10 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       }
 
+      applicantInfo.email = getValue('edit-email');
+
       updateApplicantDisplay();
+      
       updatePreview();
       editForm.style.display = 'none';
       editBtn.textContent = 'Edit'; // Reset button text
