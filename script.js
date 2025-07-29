@@ -23,16 +23,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const editForm = document.getElementById('applicant-edit-form');
 
   function getMandator() {
-  const name = document.getElementById('mandator-name')?.value.trim();
-  const email = document.getElementById('mandator-email')?.value.trim();
-  const country = document.getElementById('mandator-country')?.value.trim();
-  if (!name && !email && !country) return null;
-  return {
-    name,
-    email,
-    contactAddress: { state: country }
-  };
-}
+    const firstName = document.getElementById('mandator-first')?.value.trim();
+    const lastName = document.getElementById('mandator-last')?.value.trim();
+    const email = document.getElementById('mandator-email')?.value.trim();
+    const address = document.getElementById('mandator-address')?.value.trim();
+    const city = document.getElementById('mandator-city')?.value.trim();
+    const zip = document.getElementById('mandator-zip')?.value.trim();
+    const country = document.getElementById('mandator-country')?.value.trim();
+
+    if (!firstName && !lastName && !email && !address && !city && !zip && !country) {
+      return null;
+    }
+
+    return {
+      firstName,
+      lastName,
+      email,
+      contactAddress: {
+        address,
+        zipCode: zip,
+        city,
+        state: country
+      }
+    };
+  }
+
 
 
 
