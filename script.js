@@ -109,8 +109,33 @@ document.addEventListener('DOMContentLoaded', () => {
       if (status === 'NotARegisteredRepresentativeBeforeTheUPC') {
         mandatorSection?.classList.remove('hidden');
         mandateBox?.classList.remove('hidden');
-        const mandator = getMandator();
-        if (mandator) basePayload.mandator = mandator;
+        mandateBox?.classList.remove('hidden');
+
+        const firstName = document.getElementById('mandator-first')?.value.trim();
+        const lastName = document.getElementById('mandator-last')?.value.trim();
+        const email = document.getElementById('mandator-email')?.value.trim();
+        const phone = document.getElementById('mandator-phone')?.value.trim();
+        const address = document.getElementById('mandator-address')?.value.trim();
+        const city = document.getElementById('mandator-city')?.value.trim();
+        const zip = document.getElementById('mandator-zip')?.value.trim();
+        const country = document.getElementById('mandator-country')?.value.trim();
+
+        if (firstName && lastName && email && phone && address && city && zip && country) {
+          basePayload.mandator = {
+            naturalPersonDetails: {
+              firstName,
+              lastName
+            },
+            email,
+            phone,
+            contactAddress: {
+              address,
+              zipCode: zip,
+              city,
+              state: country
+            }
+          };
+        }
 
         if (mandatePdfBase64) {
           basePayload.documents.push({
