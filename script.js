@@ -69,12 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const submitBtn = document.getElementById('submit');
   if (submitBtn) {
+    submitBtn.disabled = true; // Start disabled
+
     submitBtn.addEventListener('click', async () => {
       const initials = document.getElementById('initials').value.trim();
       if (!applicationPDF || !initials || !applicantInfo.name) {
         alert('Initials, applicant info and application PDF are required.');
         return;
       }
+      submitBtn.disabled = true; // Prevent re-clicking during submission
       const mandator = getMandator();
       for (const ep of extractedEPs) {
         const formData = new FormData();
@@ -92,8 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
         await submitOptOut(ep, formData);
       }
+      submitBtn.disabled = false; // Re-enable after processing
     });
   }
+
+  function enableSubmitIfReady() {
+    const initials = document.getElementById('initials').value.trim();
+    if (applicationPDF && initials && applicantInfo.name && extractedEPs.length) {
+      submitBtn.disabled = false;
+    }
+  }
+
+  document.getElementById('initials')?.addEventListener('input', enableSubmitIfReady);
 });
 const allowedEmails = ["you@example.com", "colleague@example.com"];
 
