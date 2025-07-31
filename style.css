@@ -242,3 +242,16 @@ ul#ep-list {
 #json-wrapper.hidden {
   display: none;
 }
+
+.page-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #111;
+}
+
+/* Optional: add a bit of top space on the form-section */
+.form-section .container {
+  margin-top: 1rem;
+}
