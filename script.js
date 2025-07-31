@@ -52,6 +52,109 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function getMandator() {
+    const getVal = id => document.getElementById(id)?.value?.trim();
+    const firstName = getVal('mandator-first');
+    const lastName = getVal('mandator-last');
+    const email = getVal('mandator-email');
+    const address = getVal('mandator-address');
+    const city = getVal('mandator-city');
+    const zip = getVal('mandator-zip');
+    const country = getVal('mandator-country');
+    if (!firstName && !lastName && !email && !address && !city && !zip && !country) return null;
+    return {
+      naturalPersonDetails: { firstName, lastName },
+      email,
+      contactAddress: {
+        address,
+        zipCode: zip,
+        city,
+        state: country
+      }
+    };
+  }
+
+  async function extractFromSpreadsheet(file) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      let headerRowIndex = -1;
+      let headers = [];
+      for (let i = 0; i < Math.min(10, rows.length); i++) {
+        const candidate = rows[i].map(h => (h ?? '').toString().toLowerCase().trim());
+        if (candidate.some(h => h.includes('ep pub'))) {
+          headers = candidate;
+          headerRowIndex = i;
+          break;
+        }
+      }
+
+      if (headerRowIndex === -1) return alert('Header row not found');
+      const epIndex = headers.findIndex(h => h.includes('ep pub'));
+      const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
+      const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
+      const emailIndex = headers.findIndex(h => h.includes('owner 1 email'));
+
+      extractedEPs = rows.slice(headerRowIndex + 1)
+        .map(row => (row[epIndex] ?? '').toString().trim())
+        .filter(ep => ep.startsWith('EP'));
+
+      const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
+      const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
+      const email = rows[headerRowIndex + 1]?.[emailIndex]?.trim() || '';
+
+      const isNatural = document.getElementById('person-type').value === 'true';
+      document.getElementById('spinner').style.display = 'block';
+
+      try {
+        const [addrRes, nameRes] = await Promise.all([
+          fetch('https://upc-optout-backend.onrender.com/parse-address', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: addressFull })
+          }).then(res => res.json()),
+          isNatural ? fetch('https://upc-optout-backend.onrender.com/parse-name', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+          }).then(res => res.json()) : Promise.resolve(null)
+        ]);
+
+        const addressData = { ...addrRes, state: addrRes.country || addrRes.state || '' };
+        applicantInfo = {
+          isNaturalPerson: isNatural,
+          name,
+          address: addressData,
+          naturalPersonDetails: nameRes || undefined,
+          email: email || undefined
+        };
+
+        if (epList) {
+          epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p>
+            <ul>${extractedEPs.map(ep => `<li>${ep}</li>`).join('')}</ul>`;
+        }
+      } catch (err) {
+        console.error('API error:', err);
+        alert('Failed to parse address or name');
+      } finally {
+        document.getElementById('spinner').style.display = 'none';
+        enableSubmitIfReady();
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  const spreadsheet = document.getElementById('spreadsheet');
+  if (spreadsheet) {
+    spreadsheet.addEventListener('change', e => {
+      if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
+    });
+  }
+
   async function submitOptOut(ep, formData) {
     try {
       const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
@@ -69,15 +172,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const submitBtn = document.getElementById('submit');
   if (submitBtn) {
-    submitBtn.disabled = true; // Start disabled
-
+    submitBtn.disabled = true;
     submitBtn.addEventListener('click', async () => {
       const initials = document.getElementById('initials').value.trim();
       if (!applicationPDF || !initials || !applicantInfo.name) {
         alert('Initials, applicant info and application PDF are required.');
         return;
       }
-      submitBtn.disabled = true; // Prevent re-clicking during submission
+      submitBtn.disabled = true;
       const mandator = getMandator();
       for (const ep of extractedEPs) {
         const formData = new FormData();
@@ -95,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
         await submitOptOut(ep, formData);
       }
-      submitBtn.disabled = false; // Re-enable after processing
+      submitBtn.disabled = false;
     });
   }
 
@@ -108,24 +210,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('initials')?.addEventListener('input', enableSubmitIfReady);
 });
-const allowedEmails = ["you@example.com", "colleague@example.com"];
-
-window.handleCredentialResponse = async (response) => {
-  const { credential } = response;
-
-  const backendRes = await fetch('https://upc-optout-backend.onrender.com/auth', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: credential })
-  });
-
-  const result = await backendRes.json();
-  if (result.allowed) {
-    alert(`Welcome, ${result.email}`);
-    // Optionally store session info
-    sessionStorage.setItem('userEmail', result.email);
-  } else {
-    alert('Access denied');
-  }
-};
-
