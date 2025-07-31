@@ -1,5 +1,4 @@
-
-// script.js — Merged full version
+// script.js
 
 document.addEventListener('DOMContentLoaded', () => {
   let extractedEPs = [];
