@@ -1,27 +1,117 @@
-/* --- 3-column responsive layout --- */
+/* Reset & Base */
+body {
+  font-family: system-ui, sans-serif;
+  background: #f8f9fc;
+  margin: 0;
+  padding: 2rem;
+  color: #1a1a1a;
+}
+
+h1 {
+  text-align: center;
+  font-size: 1.75rem;
+  margin-bottom: 2rem;
+}
+
+/* Layout */
 .main-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* default: 2 columns */
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  align-items: flex-start;
+  align-items: start;
   margin-bottom: 2rem;
 }
 
 .main-layout.mandate-shown {
-  grid-template-columns: 2fr 1fr 1fr; /* form | application | mandate */
+  grid-template-columns: 2fr 1fr 1fr;
 }
 
-/* --- Form area --- */
-.form-section {
-  max-width: 100%;
+/* Form styling */
+.form-section .container section {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
-/* --- Preview cards --- */
+label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+input[type="file"] {
+  padding: 0.25rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #0070f3;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,112,243,0.2);
+}
+
+/* Drop zone */
+.drop-zone {
+  background: #eef1f7;
+  padding: 1rem;
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.drop-zone:hover {
+  background: #e3e8f0;
+}
+
+/* Mandator Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-grid label {
+  font-weight: 500;
+}
+
+/* Spinner */
+#spinner {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+/* Preview Cards */
 .preview-section {
   background: white;
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.preview-section label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
 }
 
 .pdf-preview {
@@ -29,6 +119,7 @@
   height: 600px;
   overflow: auto;
   border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
 .pdf-preview embed {
@@ -37,16 +128,18 @@
   object-fit: contain;
 }
 
-/* Reuse existing styles */
+/* Applicant Summary */
 .applicant-summary {
-  background: #eef5ff;
+  background: #eaf4ff;
   padding: 1rem;
   border-radius: 6px;
   margin-top: 1rem;
   font-family: sans-serif;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-size: 0.95rem;
 }
 
+/* Copy button in JSON */
 .copy-button {
   position: absolute;
   top: 8px;
@@ -57,7 +150,7 @@
   padding: 4px;
   width: 24px;
   height: 24px;
-  opacity: 0.6;
+  opacity: 0.7;
   transition: opacity 0.2s;
   display: flex;
   align-items: center;
@@ -77,6 +170,7 @@
   position: relative;
 }
 
+/* Request JSON Block */
 #request-json {
   margin: 0;
   padding: 2.5rem 1rem 1rem;
@@ -84,6 +178,51 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   white-space: pre-wrap;
+}
+
+/* Each JSON card */
+#request-json > div {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+  position: relative;
+  overflow-x: auto;
+}
+
+#request-json pre {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  font-family: monospace;
+}
+
+/* Buttons */
+button {
+  background: #0070f3;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #005ec4;
+}
+
+button#edit-applicant {
+  margin-top: 1rem;
+}
+
+button#save-applicant {
+  margin-top: 0.5rem;
+}
+
+ul#ep-list {
+  padding-left: 1.2rem;
+  color: #444;
+  margin-top: 0.5rem;
 }
 
 .hidden {
