@@ -227,10 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (headerRowIndex === -1) return alert('Header row not found');
-      const epIndex = headers.findIndex(h => h.includes('ep pub'));
-      const nameIndex = headers.findIndex(h => h.includes('owner 1 name'));
-      const addrIndex = headers.findIndex(h => h.includes('owner 1 address'));
-      const emailIndex = headers.findIndex(h => h.includes('owner 1 email'));
+        const epIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('ep pub'));
+        const nameIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 name'));
+        const addrIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 address'));
+        const emailIndex = headers.findIndex(h => (h ?? '').toString().toLowerCase().includes('owner 1 email'));
 
       extractedEPs = rows.slice(headerRowIndex + 1)
         .map(row => (row[epIndex] ?? '').toString().trim())
