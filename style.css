@@ -1,75 +1,43 @@
-body {
-  font-family: sans-serif;
-  background: #f9f9f9;
-  padding: 2rem;
-  max-width: 900px;
-  margin: auto;
-}
-
-h1 {
-  text-align: center;
+/* --- 3-column responsive layout --- */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* default: 2 columns */
+  gap: 2rem;
+  align-items: flex-start;
   margin-bottom: 2rem;
 }
 
-.container section {
-  margin-bottom: 1.5rem;
+.main-layout.mandate-shown {
+  grid-template-columns: 2fr 1fr 1fr; /* form | application | mandate */
 }
 
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
+/* --- Form area --- */
+.form-section {
+  max-width: 100%;
 }
 
-input[type="text"],
-textarea,
-input[type="file"] {
-  width: 100%;
+/* --- Preview cards --- */
+.preview-section {
+  background: white;
+  border: 1px solid #ccc;
   padding: 0.5rem;
-  font-size: 1rem;
-  box-sizing: border-box;
-}
-
-textarea {
-  height: 100px;
-  font-family: monospace;
-}
-
-ul#ep-list {
-  list-style-type: disc;
-  padding-left: 1.2rem;
-  color: #444;
-}
-
-button#submit {
-  padding: 1rem 2rem;
-  background: #0070f3;
-  color: white;
-  border: none;
   border-radius: 6px;
-  font-size: 1.1rem;
-  cursor: pointer;
 }
 
-button#submit:hover {
-  background: #005ec4;
+.pdf-preview {
+  width: 100%;
+  height: 600px;
+  overflow: auto;
+  border: 1px solid #ccc;
 }
 
-#preview {
-  background: #f0f0f0;
-  padding: 1rem;
-  font-family: monospace;
-  font-size: 0.9rem;
-  max-height: 300px;
-  overflow-y: auto;
+.pdf-preview embed {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-#result {
-  margin-top: 1rem;
-  font-family: monospace;
-  color: #333;
-}
-
+/* Reuse existing styles */
 .applicant-summary {
   background: #eef5ff;
   padding: 1rem;
@@ -120,65 +88,4 @@ button#submit:hover {
 
 .hidden {
   display: none;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.form-grid label {
-  display: flex;
-  flex-direction: column;
-  font-weight: 500;
-}
-
-.form-grid input {
-  padding: 0.4em;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.95rem;
-}
-
-.main-layout {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 1rem 2rem;
-  gap: 2rem;
-}
-
-.form-section {
-  flex: 1 1 45%;
-  max-width: 600px;
-}
-
-.preview-section {
-  flex: 1 1 55%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.preview-box {
-  background: white;
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  max-height: 700px;
-  overflow: auto;
-}
-
-.pdf-preview {
-  width: 100%;
-  height: 650px;
-  overflow: auto;
-  border: 1px solid #ccc;
-}
-
-.pdf-preview embed {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }

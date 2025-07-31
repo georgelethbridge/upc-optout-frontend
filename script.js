@@ -55,6 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
 
     const requestContainer = document.getElementById('request-json');
+    const mandateBox = document.getElementById('mandate-preview-box');
+    const mandatorSection = document.getElementById('mandator-section');
+    const mainLayout = document.getElementById('main-layout');
+
     requestContainer.innerHTML = '';
 
     const gridWrapper = document.createElement('div');
@@ -74,13 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
             zipCode: applicantInfo.address?.zipCode || '',
             state: applicantInfo.address?.state || ''
           },
-          ...(applicantInfo.isNaturalPerson ? {
-            naturalPersonDetails: applicantInfo.naturalPersonDetails
-          } : {
-            legalEntityDetails: {
-              name: applicantInfo.name
-            }
-          }),
+          ...(applicantInfo.isNaturalPerson
+            ? { naturalPersonDetails: applicantInfo.naturalPersonDetails }
+            : { legalEntityDetails: { name: applicantInfo.name } }),
           ...(applicantInfo.email ? { email: applicantInfo.email } : {})
         },
         patent: {
@@ -103,12 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ]
       };
 
-      const mandatorSection = document.getElementById('mandator-section');
-      const mandateBox = document.getElementById('mandate-preview-box');
-
       if (status === 'NotARegisteredRepresentativeBeforeTheUPC') {
         mandatorSection?.classList.remove('hidden');
         mandateBox?.classList.remove('hidden');
+        mainLayout?.classList.add('mandate-shown');
 
         const mandator = getMandator();
         if (mandator) {
@@ -133,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         mandatorSection?.classList.add('hidden');
         mandateBox?.classList.add('hidden');
+        mainLayout?.classList.remove('mandate-shown');
       }
 
       const container = document.createElement('div');
@@ -175,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     requestContainer.appendChild(gridWrapper);
   }
+
   // Hook to show/hide Mandator section on initials input
   const initialsField = document.getElementById('initials');
   if (initialsField) {
