@@ -1,4 +1,5 @@
-// script.js
+
+// script.js — Merged full version
 
 document.addEventListener('DOMContentLoaded', () => {
   let extractedEPs = [];
@@ -11,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const epList = document.getElementById('ep-list');
   const result = document.getElementById('result');
   const applicantSummary = document.getElementById('applicant-summary');
-  const submitButton = document.getElementById('submit');
+  const submitBtn = document.getElementById('submit');
   const appPdfBase64Display = document.getElementById('app-pdf-base64');
   const mandatePdfBase64Display = document.getElementById('mandate-pdf-base64');
   const requestBodyDisplay = document.getElementById('request-json');
@@ -19,6 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const editBtn = document.getElementById('edit-applicant');
   const saveBtn = document.getElementById('save-applicant');
   const editForm = document.getElementById('applicant-edit-form');
+  const spinner = document.getElementById('spinner');
+
+  function enableSubmitIfReady() {
+    const initials = document.getElementById('initials').value.trim();
+    if (applicationPDF && initials && applicantInfo.name && extractedEPs.length) {
+      submitBtn.disabled = false;
+    }
+  }
 
   function setupDropZone(dropZoneId, inputId) {
     const dropZone = document.getElementById(dropZoneId);
@@ -39,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
   setupDropZone('spreadsheet-drop', 'spreadsheet');
   setupDropZone('application-drop', 'application_pdf');
   setupDropZone('mandate-drop', 'mandate_pdf');
@@ -50,6 +60,116 @@ document.addEventListener('DOMContentLoaded', () => {
       const isHidden = jsonWrapper.classList.toggle('hidden');
       toggleBtn.textContent = isHidden ? '▶ Show Final JSON' : '▼ Hide Final JSON';
     });
+  }
+
+  function updateApplicantDisplay() {
+    try {
+      const { address = {}, name, isNaturalPerson, naturalPersonDetails } = applicantInfo;
+      let html = `<strong>Name:</strong> ${name || ''}<br>
+                  <strong>Type:</strong> ${isNaturalPerson ? 'Natural Person' : 'Legal Entity'}<br>
+                  <strong>Address:</strong><br>
+                  ${address.address || ''}<br>
+                  ${address.city || ''} ${address.zipCode || ''}<br>
+                  ${address.state || ''}`;
+      if (applicantInfo.email) {
+        html += `<br><strong>Email:</strong> ${applicantInfo.email}`;
+      }
+      if (isNaturalPerson && naturalPersonDetails) {
+        html += `<br><strong>First Name:</strong> ${naturalPersonDetails.firstName || ''}<br>
+                 <strong>Last Name:</strong> ${naturalPersonDetails.lastName || ''}`;
+      }
+      if (applicantSummary) applicantSummary.innerHTML = html;
+    } catch (err) {
+      console.error('Failed to update applicant display', err);
+    }
+  }
+
+  function updatePreview() {
+    const initials = document.getElementById('initials').value.trim();
+    const status = initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC';
+
+    requestBodyDisplay.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'grid';
+    wrapper.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+    wrapper.style.gap = '1rem';
+
+    extractedEPs.forEach(ep => {
+      const payload = {
+        statusPersonLodgingApplication: status,
+        internalReference: ep,
+        applicant: {
+          isNaturalPerson: applicantInfo.isNaturalPerson,
+          contactAddress: applicantInfo.address || {},
+          ...(applicantInfo.isNaturalPerson ? { naturalPersonDetails: applicantInfo.naturalPersonDetails } : { legalEntityDetails: { name: applicantInfo.name } }),
+          ...(applicantInfo.email ? { email: applicantInfo.email } : {})
+        },
+        patent: { patentNumber: ep },
+        documents: [{
+          documentType: 'Application',
+          documentTitle: `Opt-out ${ep}`,
+          documentDescription: `Opt-out application for ${ep}`,
+          attachments: [{
+            data: applicationPdfBase64,
+            language: 'en',
+            filename: `Optout_${ep}.pdf`,
+            mimeType: 'application/pdf'
+          }]
+        }]
+      };
+
+      const mandator = getMandator();
+      if (status === 'NotARegisteredRepresentativeBeforeTheUPC' && mandator) {
+        payload.mandator = mandator;
+        if (mandatePdfBase64) {
+          payload.documents.push({
+            documentType: 'Mandate',
+            documentTitle: 'Mandate Form',
+            documentDescription: `Mandate for ${ep}`,
+            attachments: [{
+              data: mandatePdfBase64,
+              language: 'en',
+              filename: `Optout_mandate_${ep}.pdf`,
+              mimeType: 'application/pdf'
+            }]
+          });
+        }
+      }
+
+      const box = document.createElement('div');
+      box.style.border = '1px solid #ccc';
+      box.style.padding = '1rem';
+      box.style.position = 'relative';
+      box.style.background = '#f9f9f9';
+
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(payload, null, 2);
+
+      const copyBtn = document.createElement('button');
+      copyBtn.innerHTML = '<img src="copy-icon.svg" alt="Copy" width="16" height="16">';
+      copyBtn.style.position = 'absolute';
+      copyBtn.style.top = '0.5rem';
+      copyBtn.style.right = '0.5rem';
+      copyBtn.style.background = 'transparent';
+      copyBtn.style.border = 'none';
+      copyBtn.style.cursor = 'pointer';
+
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+          copyBtn.innerHTML = '<img src="check-icon.svg" alt="Copied" width="16" height="16">';
+          setTimeout(() => {
+            copyBtn.innerHTML = '<img src="copy-icon.svg" alt="Copy" width="16" height="16">';
+          }, 1500);
+        });
+      });
+
+      box.appendChild(copyBtn);
+      box.appendChild(pre);
+      wrapper.appendChild(box);
+    });
+
+    requestBodyDisplay.appendChild(wrapper);
   }
 
   function getMandator() {
@@ -72,6 +192,19 @@ document.addEventListener('DOMContentLoaded', () => {
         state: country
       }
     };
+  }
+
+  function readFileAsBase64(file, callback) {
+    const reader = new FileReader();
+    reader.onload = () => callback(reader.result.split(',')[1]);
+    reader.readAsDataURL(file);
+  }
+
+  const spreadsheet = document.getElementById('spreadsheet');
+  if (spreadsheet) {
+    spreadsheet.addEventListener('change', e => {
+      if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
+    });
   }
 
   async function extractFromSpreadsheet(file) {
@@ -106,9 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
       const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
       const email = rows[headerRowIndex + 1]?.[emailIndex]?.trim() || '';
-
       const isNatural = document.getElementById('person-type').value === 'true';
-      document.getElementById('spinner').style.display = 'block';
+
+      spinner.style.display = 'block';
 
       try {
         const [addrRes, nameRes] = await Promise.all([
@@ -137,76 +270,168 @@ document.addEventListener('DOMContentLoaded', () => {
           epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p>
             <ul>${extractedEPs.map(ep => `<li>${ep}</li>`).join('')}</ul>`;
         }
+
       } catch (err) {
         console.error('API error:', err);
         alert('Failed to parse address or name');
       } finally {
-        document.getElementById('spinner').style.display = 'none';
+        spinner.style.display = 'none';
+        updateApplicantDisplay();
+        updatePreview();
         enableSubmitIfReady();
       }
     };
     reader.readAsArrayBuffer(file);
   }
 
-  const spreadsheet = document.getElementById('spreadsheet');
-  if (spreadsheet) {
-    spreadsheet.addEventListener('change', e => {
-      if (e.target.files[0]) extractFromSpreadsheet(e.target.files[0]);
-    });
-  }
+  document.getElementById('initials')?.addEventListener('input', () => {
+    updatePreview();
+    enableSubmitIfReady();
+  });
 
-  async function submitOptOut(ep, formData) {
-    try {
-      const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
-        method: 'POST',
-        body: formData
-      });
-      const resJson = await res.json();
-      const status = res.ok ? '✅' : '❌';
-      const message = resJson.message || resJson.error || 'Unknown response';
-      result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
-    } catch (e) {
-      result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect to server</p>`;
+  const applicationPdfInput = document.getElementById('application_pdf');
+  applicationPdfInput?.addEventListener('change', e => {
+    applicationPDF = e.target.files[0];
+    readFileAsBase64(applicationPDF, base64 => {
+      applicationPdfBase64 = base64;
+      appPdfBase64Display.textContent = base64;
+      updatePreview();
+      enableSubmitIfReady();
+    });
+    const preview = document.getElementById('application-preview');
+    if (preview) {
+      const objectURL = URL.createObjectURL(applicationPDF);
+      preview.innerHTML = `<embed src="${objectURL}" type="application/pdf" width="100%" height="600px">`;
     }
-  }
+  });
 
-  const submitBtn = document.getElementById('submit');
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.addEventListener('click', async () => {
-      const initials = document.getElementById('initials').value.trim();
-      if (!applicationPDF || !initials || !applicantInfo.name) {
-        alert('Initials, applicant info and application PDF are required.');
-        return;
-      }
-      submitBtn.disabled = true;
-      const mandator = getMandator();
-      for (const ep of extractedEPs) {
-        const formData = new FormData();
-        formData.append('initials', initials);
-        formData.append('ep_number', ep);
-        formData.append('applicant', JSON.stringify({
-          isNaturalPerson: applicantInfo.isNaturalPerson,
-          contactAddress: applicantInfo.address,
-          email: applicantInfo.email,
-          naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
-          legalEntityDetails: !applicantInfo.isNaturalPerson ? { name: applicantInfo.name } : undefined
-        }));
-        if (mandator) formData.append('mandator', JSON.stringify(mandator));
-        formData.append('application_pdf', applicationPDF);
-        if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
-        await submitOptOut(ep, formData);
-      }
-      submitBtn.disabled = false;
+  const mandatePdfInput = document.getElementById('mandate_pdf');
+  mandatePdfInput?.addEventListener('change', e => {
+    mandatePDF = e.target.files[0];
+    readFileAsBase64(mandatePDF, base64 => {
+      mandatePdfBase64 = base64;
+      mandatePdfBase64Display.textContent = base64;
+      updatePreview();
     });
-  }
+    const preview = document.getElementById('mandate-preview');
+    if (preview) {
+      const url = URL.createObjectURL(mandatePDF);
+      preview.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="400px" />`;
+    }
+  });
 
-  function enableSubmitIfReady() {
+  // Submission logic
+  submitBtn?.addEventListener('click', async () => {
     const initials = document.getElementById('initials').value.trim();
-    if (applicationPDF && initials && applicantInfo.name && extractedEPs.length) {
-      submitBtn.disabled = false;
+    if (!applicationPDF || !initials || !applicantInfo.name) {
+      alert('Initials, applicant info and application PDF are required.');
+      return;
     }
+
+    submitBtn.disabled = true;
+    result.innerHTML = '';
+    const mandator = getMandator();
+
+    for (const ep of extractedEPs) {
+      const formData = new FormData();
+      formData.append('initials', initials);
+      formData.append('ep_number', ep);
+      formData.append('applicant', JSON.stringify({
+        isNaturalPerson: applicantInfo.isNaturalPerson,
+        contactAddress: applicantInfo.address,
+        email: applicantInfo.email,
+        naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
+        legalEntityDetails: !applicantInfo.isNaturalPerson ? { name: applicantInfo.name } : undefined
+      }));
+      if (mandator) formData.append('mandator', JSON.stringify(mandator));
+      formData.append('application_pdf', applicationPDF);
+      if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
+
+      try {
+        const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
+          method: 'POST',
+          body: formData
+        });
+        const resJson = await res.json();
+        const status = res.ok ? '✅' : '❌';
+        const message = resJson.message || resJson.error || 'Unknown response';
+        result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
+      } catch (e) {
+        result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
+      }
+    }
+
+    submitBtn.disabled = false;
+  });
+
+  // Edit/Save applicant UI
+  if (editBtn && saveBtn && editForm) {
+    let originalInfo = null;
+    editBtn.addEventListener('click', () => {
+      if (editBtn.textContent === 'Edit') {
+        originalInfo = JSON.parse(JSON.stringify(applicantInfo));
+        editForm.style.display = 'block';
+        editBtn.textContent = 'Cancel';
+        const set = (id, val) => { const e = document.getElementById(id); if (e) e.value = val || ''; };
+        set('edit-name', applicantInfo.name);
+        set('edit-address', applicantInfo.address?.address);
+        set('edit-city', applicantInfo.address?.city);
+        set('edit-zip', applicantInfo.address?.zipCode);
+        set('edit-state', applicantInfo.address?.state);
+        set('edit-email', applicantInfo.email);
+        if (applicantInfo.isNaturalPerson) {
+          document.getElementById('name-split-fields').style.display = 'block';
+          set('edit-first', applicantInfo.naturalPersonDetails?.firstName);
+          set('edit-last', applicantInfo.naturalPersonDetails?.lastName);
+        } else {
+          document.getElementById('name-split-fields').style.display = 'none';
+        }
+      } else {
+        applicantInfo = originalInfo;
+        updateApplicantDisplay();
+        updatePreview();
+        editForm.style.display = 'none';
+        editBtn.textContent = 'Edit';
+      }
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const get = id => document.getElementById(id)?.value?.trim() || '';
+      applicantInfo.name = get('edit-name');
+      applicantInfo.address = {
+        address: get('edit-address'),
+        city: get('edit-city'),
+        zipCode: get('edit-zip'),
+        state: get('edit-state')
+      };
+      applicantInfo.email = get('edit-email');
+      if (applicantInfo.isNaturalPerson) {
+        applicantInfo.naturalPersonDetails = {
+          firstName: get('edit-first'),
+          lastName: get('edit-last')
+        };
+      }
+      updateApplicantDisplay();
+      updatePreview();
+      editForm.style.display = 'none';
+      editBtn.textContent = 'Edit';
+    });
   }
 
-  document.getElementById('initials')?.addEventListener('input', enableSubmitIfReady);
+  if (copyRequestJsonButton) {
+    const copyIcon = copyRequestJsonButton.querySelector('.copy-icon');
+    const successIcon = copyRequestJsonButton.querySelector('.success-icon');
+    copyRequestJsonButton.addEventListener('click', () => {
+      if (requestBodyDisplay.textContent) {
+        navigator.clipboard.writeText(requestBodyDisplay.textContent).then(() => {
+          copyIcon.style.display = 'none';
+          successIcon.style.display = 'inline-block';
+          setTimeout(() => {
+            copyIcon.style.display = 'inline-block';
+            successIcon.style.display = 'none';
+          }, 2000);
+        });
+      }
+    });
+  }
 });
