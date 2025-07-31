@@ -377,18 +377,52 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('application_pdf', applicationPDF);
       if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
 
+      // Real token fetch (token will still go through your backend sandbox API)
       try {
-        const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
+        const tokenRes = await fetch('https://upc-optout-backend.onrender.com/token', {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initials })
         });
-        const resJson = await res.json();
-        const status = res.ok ? '✅' : '❌';
-        const message = resJson.message || resJson.error || 'Unknown response';
-        result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
-      } catch (e) {
-        result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
+        const tokenData = await tokenRes.json();
+        console.log('🔐 Token (live from sandbox):', tokenData.access_token);
+      } catch (err) {
+        console.error('❌ Failed to retrieve token:', err);
+        result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to get token</p>`;
+        return;
       }
+
+      // Fake submission — log what would be sent
+      const mockBody = {
+        initials,
+        ep_number: ep,
+        applicant: {
+          isNaturalPerson: applicantInfo.isNaturalPerson,
+          contactAddress: applicantInfo.address,
+          email: applicantInfo.email,
+          naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
+          legalEntityDetails: !applicantInfo.isNaturalPerson ? { name: applicantInfo.name } : undefined
+        },
+        mandator: mandator || undefined
+      };
+
+      console.log(`📤 [TEST MODE] Would send for EP ${ep}:`, mockBody);
+      result.innerHTML += `<p>🧪 [Test Mode] Prepared request for <strong>${ep}</strong> (see console)</p>`;
+
+      // -- Uncomment this block to enable live submission:
+      // try {
+      //   const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
+      //     method: 'POST',
+      //     body: formData
+      //   });
+      //   const resJson = await res.json();
+      //   const status = res.ok ? '✅' : '❌';
+      //   const message = resJson.message || resJson.error || 'Unknown response';
+      //   result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
+      // } catch (e) {
+      //   result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
+      // }
+
     }
 
     submitBtn.disabled = false;
