@@ -24,10 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateMandatorSection() {
     const initials = document.getElementById('initials').value.trim();
-    const isRep = initials === 'YH';
     const mandateBox = document.getElementById('mandate-preview-box');
     const mandatorSection = document.getElementById('mandator-section');
     const mainLayout = document.getElementById('main-layout');
+
+    if (!initials) {
+      // If initials not filled in at all, hide mandate UI
+      mandatorSection?.classList.add('hidden');
+      mandateBox?.classList.add('hidden');
+      mainLayout?.classList.remove('mandate-shown');
+      return;
+    }
+
+    const isRep = initials === 'YH';
 
     if (!isRep) {
       mandatorSection?.classList.remove('hidden');
@@ -38,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
       mandateBox?.classList.add('hidden');
       mainLayout?.classList.remove('mandate-shown');
     }
-  }
+  };
 
 
   function enableSubmitIfReady() {
