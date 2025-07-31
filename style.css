@@ -233,3 +233,12 @@ ul#ep-list {
   background: #d9e8ff;
   border-color: #3399ff;
 }
+
+#json-wrapper {
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+}
+
+#json-wrapper.hidden {
+  display: none;
+}

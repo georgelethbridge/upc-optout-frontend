@@ -599,6 +599,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDropZone('mandate-drop', 'mandate_pdf');
 
 
+  const toggleBtn = document.getElementById('toggle-json');
+  const jsonWrapper = document.getElementById('json-wrapper');
+
+  if (toggleBtn && jsonWrapper) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = jsonWrapper.classList.toggle('hidden');
+      toggleBtn.textContent = isHidden ? '▶ Show Final JSON' : '▼ Hide Final JSON';
+    });
+  }
+
 });
 const allowedEmails = ["you@example.com", "colleague@example.com"];
 
