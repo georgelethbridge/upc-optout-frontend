@@ -22,6 +22,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const editForm = document.getElementById('applicant-edit-form');
   const spinner = document.getElementById('spinner');
 
+  function updateMandatorSection() {
+    const initials = document.getElementById('initials').value.trim();
+    const isRep = initials === 'YH';
+    const mandateBox = document.getElementById('mandate-preview-box');
+    const mandatorSection = document.getElementById('mandator-section');
+    const mainLayout = document.getElementById('main-layout');
+
+    if (!isRep) {
+      mandatorSection?.classList.remove('hidden');
+      mandateBox?.classList.remove('hidden');
+      mainLayout?.classList.add('mandate-shown');
+    } else {
+      mandatorSection?.classList.add('hidden');
+      mandateBox?.classList.add('hidden');
+      mainLayout?.classList.remove('mandate-shown');
+    }
+  }
+
+
   function enableSubmitIfReady() {
     const initials = document.getElementById('initials').value.trim();
     if (applicationPDF && initials && applicantInfo.name && extractedEPs.length) {
@@ -277,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         spinner.style.display = 'none';
         updateApplicantDisplay();
+        updateMandatorSection();
         updatePreview();
         enableSubmitIfReady();
       }
@@ -285,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('initials')?.addEventListener('input', () => {
+    updateMandatorSection();
     updatePreview();
     enableSubmitIfReady();
   });
@@ -434,4 +455,5 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  updateMandatorSection();
 });
