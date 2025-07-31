@@ -228,3 +228,8 @@ ul#ep-list {
 .hidden {
   display: none;
 }
+
+.drop-zone.drag-over {
+  background: #d9e8ff;
+  border-color: #3399ff;
+}

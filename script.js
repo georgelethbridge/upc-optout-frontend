@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
           setInputValue('edit-first', applicantInfo.naturalPersonDetails?.firstName);
           setInputValue('edit-last', applicantInfo.naturalPersonDetails?.lastName);
         }
-        
+
         setInputValue('edit-email', applicantInfo.email);
 
         editForm.style.display = 'block';
@@ -565,6 +565,40 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.log('Copy button not found');
   }
+
+  function setupDropZone(dropZoneId, inputId) {
+    const dropZone = document.getElementById(dropZoneId);
+    const input = document.getElementById(inputId);
+
+    if (!dropZone || !input) return;
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        input.files = e.dataTransfer.files;
+
+        // Trigger change event manually
+        const event = new Event('change', { bubbles: true });
+        input.dispatchEvent(event);
+      }
+    });
+  }
+  setupDropZone('spreadsheet-drop', 'spreadsheet');
+  setupDropZone('application-drop', 'application_pdf');
+  setupDropZone('mandate-drop', 'mandate_pdf');
+
+
 });
 const allowedEmails = ["you@example.com", "colleague@example.com"];
 
