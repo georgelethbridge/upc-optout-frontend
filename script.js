@@ -491,6 +491,8 @@ document.addEventListener('DOMContentLoaded', () => {
           setInputValue('edit-first', applicantInfo.naturalPersonDetails?.firstName);
           setInputValue('edit-last', applicantInfo.naturalPersonDetails?.lastName);
         }
+        
+        setInputValue('edit-email', applicantInfo.email);
 
         editForm.style.display = 'block';
         editBtn.textContent = 'Cancel';
