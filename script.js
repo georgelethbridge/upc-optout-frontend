@@ -394,6 +394,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 🔄 LIVE submission
       try {
+        // Mirror final JSON sent to UPC
+        const finalJsonPreview = {
+          statusPersonLodgingApplication: initials === 'YH' ? 'RegisteredRepresentativeBeforeTheUPC' : 'NotARegisteredRepresentativeBeforeTheUPC',
+          internalReference: ep,
+          applicant: {
+            isNaturalPerson: applicantInfo.isNaturalPerson,
+            contactAddress: applicantInfo.address,
+            email: applicantInfo.email,
+            naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
+            legalEntityDetails: !applicantInfo.isNaturalPerson ? { name: applicantInfo.name } : undefined
+          },
+          patent: { patentNumber: ep },
+          documents: [{
+            documentType: 'Application',
+            documentTitle: `Opt-out ${ep}`,
+            documentDescription: `Opt-out application for ${ep}`,
+            attachments: [{
+              data: '[base64 omitted]',
+              language: 'en',
+              filename: `Optout_${ep}.pdf`,
+              mimeType: 'application/pdf'
+            }]
+          }]
+        };
+
+        if (mandator) {
+          finalJsonPreview.mandator = mandator;
+          if (mandatePDF) {
+            finalJsonPreview.documents.push({
+              documentType: 'Mandate',
+              documentTitle: 'Mandate Form',
+              documentDescription: `Mandate for ${ep}`,
+              attachments: [{
+                data: '[base64 omitted]',
+                language: 'en',
+                filename: `Optout_mandate_${ep}.pdf`,
+                mimeType: 'application/pdf'
+              }]
+            });
+          }
+        }
+
+        console.log(`📦 Final JSON sent to backend for EP ${ep}:`, finalJsonPreview);
+
         const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
           method: 'POST',
           body: formData
