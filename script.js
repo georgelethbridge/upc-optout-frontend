@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let applicationPdfBase64 = "";
   let mandatePdfBase64 = "";
 
+  const applicationPdfInput = document.getElementById('application_pdf');
   const epList = document.getElementById('ep-list');
   const result = document.getElementById('result');
   const applicantSummary = document.getElementById('applicant-summary');
