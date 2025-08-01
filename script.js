@@ -334,19 +334,25 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateEpListWithMatches(pdfText = '') {
     if (!epList || !extractedEPs.length) return;
 
-    // Normalize PDF text: remove brackets, convert to uppercase, and strip Unicode weirdness
+    // Normalize PDF text
     const normalizedText = pdfText
-      .normalize('NFKD')                         // normalize accented chars, unicode spacing, etc.
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')     // remove zero-width spaces and BOMs
-      .replace(/[^A-Z0-9]/gi, '')                // remove anything not alphanumeric
+      .normalize('NFKD')                                // Normalize Unicode (e.g., accented chars, etc.)
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')            // Remove invisible zero-width chars
+      .replace(/[\[\]()\{\}]/g, '')                     // Strip brackets
+      .replace(/\s+/g, '')                              // Remove all whitespace
       .toUpperCase();
+
+    console.log("📄 Normalized PDF text preview:", normalizedText.slice(0, 500));
 
     epList.innerHTML = `<p>Found ${extractedEPs.length} EP number${extractedEPs.length === 1 ? '' : 's'}:</p><ul>`;
 
     for (const ep of extractedEPs) {
-      const epNorm = ep.replace(/[^A-Z0-9]/gi, '').toUpperCase();  // strip all but A-Z, 0-9
+      const epNorm = ep.replace(/[^A-Z0-9]/gi, '').toUpperCase();  // Normalize EP number too
 
       const found = normalizedText.includes(epNorm);
+
+      console.log(`🔍 Matching EP: ${epNorm} -> ${found ? '✅ FOUND' : '❌ NOT FOUND'}`);
+
       const status = found ? '✅ Found in PDF' : '❌ Not in PDF';
       const color = found ? 'green' : 'red';
       epList.innerHTML += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
@@ -354,8 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     epList.innerHTML += `</ul>`;
   }
-
-
 
 
   document.getElementById('initials')?.addEventListener('input', () => {
@@ -381,6 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const pdfText = await extractTextFromPDF(applicationPDF);
+      // test
+      console.log("📄 Extracted PDF text:", pdfText);
       updateEpListWithMatches(pdfText);
     } catch (err) {
       console.error("Failed to extract text from PDF", err);
