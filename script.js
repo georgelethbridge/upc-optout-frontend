@@ -334,21 +334,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateEpListWithMatches(pdfText = '') {
     if (!epList || !extractedEPs.length) return;
 
-    // Normalize the PDF text: remove brackets, line breaks, weird spaces, etc.
-    const cleanText = pdfText
-      .replace(/[\[\]\(\)\{\}\n\r]+/g, ' ')      // remove brackets and line breaks
-      .replace(/\s+/g, ' ')                      // collapse all whitespace
+    // Normalize PDF text: remove brackets, convert to uppercase, and strip Unicode weirdness
+    const normalizedText = pdfText
+      .normalize('NFKD')                         // normalize accented chars, unicode spacing, etc.
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')     // remove zero-width spaces and BOMs
+      .replace(/[^A-Z0-9]/gi, '')                // remove anything not alphanumeric
       .toUpperCase();
 
-    epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p><ul>`;
+    epList.innerHTML = `<p>Found ${extractedEPs.length} EP number${extractedEPs.length === 1 ? '' : 's'}:</p><ul>`;
 
     for (const ep of extractedEPs) {
-      const normalizedEP = ep.toUpperCase().replace(/\s+/g, '');
+      const epNorm = ep.replace(/[^A-Z0-9]/gi, '').toUpperCase();  // strip all but A-Z, 0-9
 
-      // Allow match of "EP1234567" with or without space or bracket in PDF
-      const regex = new RegExp(`\\b${normalizedEP}\\b`, 'i');
-      const found = regex.test(cleanText);
-
+      const found = normalizedText.includes(epNorm);
       const status = found ? '✅ Found in PDF' : '❌ Not in PDF';
       const color = found ? 'green' : 'red';
       epList.innerHTML += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
@@ -356,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     epList.innerHTML += `</ul>`;
   }
+
 
 
 
