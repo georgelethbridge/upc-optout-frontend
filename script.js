@@ -48,6 +48,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  async function extractTextFromPDF(file) {
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const strings = content.items.map(item => item.str);
+      fullText += strings.join(' ') + ' ';
+    }
+    return fullText;
+  }
+
+
 
   function enableSubmitIfReady() {
     const initials = document.getElementById('initials').value.trim();
@@ -312,14 +330,27 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsArrayBuffer(file);
   }
 
+  function updateEpListWithMatches(pdfText = '') {
+    if (!epList || !extractedEPs.length) return;
+
+    epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p><ul>`;
+    for (const ep of extractedEPs) {
+      const found = pdfText.includes(ep);
+      const status = found ? '✅ Found in PDF' : '❌ Not in PDF';
+      const color = found ? 'green' : 'red';
+      epList.innerHTML += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
+    }
+    epList.innerHTML += `</ul>`;
+  }
+
+
   document.getElementById('initials')?.addEventListener('input', () => {
     updateMandatorSection();
     updatePreview();
     enableSubmitIfReady();
   });
 
-  const applicationPdfInput = document.getElementById('application_pdf');
-  applicationPdfInput?.addEventListener('change', e => {
+  applicationPdfInput?.addEventListener('change', async e => {
     applicationPDF = e.target.files[0];
     readFileAsBase64(applicationPDF, base64 => {
       applicationPdfBase64 = base64;
@@ -327,12 +358,22 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePreview();
       enableSubmitIfReady();
     });
+
     const preview = document.getElementById('application-preview');
     if (preview) {
       const objectURL = URL.createObjectURL(applicationPDF);
       preview.innerHTML = `<embed src="${objectURL}" type="application/pdf" width="100%" height="600px">`;
     }
+
+    try {
+      const pdfText = await extractTextFromPDF(applicationPDF);
+      updateEpListWithMatches(pdfText);
+    } catch (err) {
+      console.error("Failed to extract text from PDF", err);
+      alert("Could not scan PDF for EP numbers.");
+    }
   });
+
 
   const mandatePdfInput = document.getElementById('mandate_pdf');
   mandatePdfInput?.addEventListener('change', e => {
