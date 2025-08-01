@@ -334,18 +334,29 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateEpListWithMatches(pdfText = '') {
     if (!epList || !extractedEPs.length) return;
 
+    // Normalize the PDF text: remove brackets, line breaks, weird spaces, etc.
+    const cleanText = pdfText
+      .replace(/[\[\]\(\)\{\}\n\r]+/g, ' ')      // remove brackets and line breaks
+      .replace(/\s+/g, ' ')                      // collapse all whitespace
+      .toUpperCase();
+
     epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p><ul>`;
+
     for (const ep of extractedEPs) {
-      const epCore = ep.replace(/\s+/g, '');
-      const matchRegex = new RegExp(`\\[\\s*${epCore}\\s*\\]`, 'i');
-      const found = matchRegex.test(pdfText);
+      const normalizedEP = ep.toUpperCase().replace(/\s+/g, '');
+
+      // Allow match of "EP1234567" with or without space or bracket in PDF
+      const regex = new RegExp(`\\b${normalizedEP}\\b`, 'i');
+      const found = regex.test(cleanText);
 
       const status = found ? '✅ Found in PDF' : '❌ Not in PDF';
       const color = found ? 'green' : 'red';
       epList.innerHTML += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
     }
+
     epList.innerHTML += `</ul>`;
   }
+
 
 
   document.getElementById('initials')?.addEventListener('input', () => {
