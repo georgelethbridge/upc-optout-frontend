@@ -402,7 +402,36 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`📄 Full backend response for ${ep}:`, resJson);
         const status = res.ok ? '✅' : '❌';
         const message = resJson.message || resJson.error || 'Unknown response';
-        result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
+        if (!document.getElementById('results-table')) {
+          result.innerHTML = `
+            <table id="results-table" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+              <thead>
+                <tr>
+                  <th style="text-align: left; border-bottom: 1px solid #ccc;">EP Number</th>
+                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Message</th>
+                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Date/Time</th>
+                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Request ID</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          `;
+        }
+
+        const tableBody = document.querySelector('#results-table tbody');
+        const now = resJson.receptionTime 
+          ? new Date(resJson.receptionTime).toLocaleString()
+          : new Date().toLocaleString();
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${ep}</td>
+          <td>${message}</td>
+          <td>${now}</td>
+          <td>${resJson.requestId || '—'}</td>
+        `;
+        tableBody.appendChild(row);
+
       } catch (e) {
         result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
         console.error(`❌ Network or backend error for ${ep}:`, e);
