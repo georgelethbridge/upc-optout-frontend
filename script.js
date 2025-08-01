@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('application_pdf', applicationPDF);
       if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
 
-      // Real token fetch (token will still go through your backend sandbox API)
+      // Optional token fetch (just for console visibility / debug)
       try {
         const tokenRes = await fetch('https://upc-optout-backend.onrender.com/token', {
           method: 'POST',
@@ -384,14 +384,32 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ initials })
         });
         const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) throw new Error(tokenData.error || 'Missing access_token');
         console.log('🔐 Token (live from sandbox):', tokenData.access_token);
       } catch (err) {
-        console.error('❌ Failed to retrieve token:', err);
+        console.error(`❌ Failed to retrieve token for ${ep}:`, err);
         result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to get token</p>`;
-        return;
+        continue; // Don't halt entire queue
       }
 
-      // Fake submission — log what would be sent
+      // 🔄 LIVE submission
+      try {
+        const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
+          method: 'POST',
+          body: formData
+        });
+        const resJson = await res.json();
+        console.log(`📄 Full backend response for ${ep}:`, resJson);
+        const status = res.ok ? '✅' : '❌';
+        const message = resJson.message || resJson.error || 'Unknown response';
+        result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
+      } catch (e) {
+        result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
+        console.error(`❌ Network or backend error for ${ep}:`, e);
+      }
+
+      /*
+      // 🧪 TEST MODE — previously used for logging only, now disabled
       const mockBody = {
         initials,
         ep_number: ep,
@@ -407,25 +425,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       console.log(`📤 [TEST MODE] Would send for EP ${ep}:`, mockBody);
       result.innerHTML += `<p>🧪 [Test Mode] Prepared request for <strong>${ep}</strong> (see console)</p>`;
-
-      // -- Uncomment this block to enable live submission:
-      // try {
-      //   const res = await fetch('https://upc-optout-backend.onrender.com/submit', {
-      //     method: 'POST',
-      //     body: formData
-      //   });
-      //   const resJson = await res.json();
-      //   const status = res.ok ? '✅' : '❌';
-      //   const message = resJson.message || resJson.error || 'Unknown response';
-      //   result.innerHTML += `<p><strong>${ep}</strong>: ${status} ${message}</p>`;
-      // } catch (e) {
-      //   result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
-      // }
-
+      */
     }
 
     submitBtn.disabled = false;
   });
+
 
   // Edit/Save applicant UI
   if (editBtn && saveBtn && editForm) {
