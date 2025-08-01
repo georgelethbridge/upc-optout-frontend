@@ -336,7 +336,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p><ul>`;
     for (const ep of extractedEPs) {
-      const found = pdfText.includes(ep);
+      const epCore = ep.replace(/\s+/g, '');
+      const matchRegex = new RegExp(`\\[\\s*${epCore}\\s*\\]`, 'i');
+      const found = matchRegex.test(pdfText);
+
       const status = found ? '✅ Found in PDF' : '❌ Not in PDF';
       const color = found ? 'green' : 'red';
       epList.innerHTML += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
