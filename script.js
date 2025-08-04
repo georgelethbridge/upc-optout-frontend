@@ -336,30 +336,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Normalize PDF text
     const normalizedText = pdfText
-      .normalize('NFKD')                                // Normalize Unicode (e.g., accented chars, etc.)
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')            // Remove invisible zero-width chars
-      .replace(/[\[\]()\{\}]/g, '')                     // Strip brackets
-      .replace(/\s+/g, '')                              // Remove all whitespace
+      .normalize('NFKD')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/[\[\]()\{\}]/g, '')
+      .replace(/\s+/g, '')
       .toUpperCase();
 
     console.log("📄 Normalized PDF text preview:", normalizedText.slice(0, 500));
 
-    epList.innerHTML = `<p>Found ${extractedEPs.length} EP number${extractedEPs.length === 1 ? '' : 's'}:</p><ul>`;
+    const seen = new Set();
+    const duplicates = new Set();
+    const matchedEPs = new Set();
+    const unmatchedInPdf = [];
+
+    let html = `<p>Found ${extractedEPs.length} EP number${extractedEPs.length === 1 ? '' : 's'}:</p><ul>`;
 
     for (const ep of extractedEPs) {
-      const epNorm = ep.replace(/[^A-Z0-9]/gi, '').toUpperCase();  // Normalize EP number too
+      const epNorm = ep.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
+      if (seen.has(epNorm)) {
+        duplicates.add(ep);
+      } else {
+        seen.add(epNorm);
+      }
 
       const found = normalizedText.includes(epNorm);
-
-      console.log(`🔍 Matching EP: ${epNorm} -> ${found ? '✅ FOUND' : '❌ NOT FOUND'}`);
+      if (found) matchedEPs.add(epNorm);
 
       const status = found ? '✅ Found in PDF' : '❌ Not in PDF';
       const color = found ? 'green' : 'red';
-      epList.innerHTML += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
+      html += `<li>${ep} <span style="color: ${color}; font-weight: bold;">${status}</span></li>`;
     }
 
-    epList.innerHTML += `</ul>`;
+    html += '</ul>';
+
+    if (duplicates.size > 0) {
+      html += `<p style="color: darkorange; font-weight: bold;">⚠️ Duplicate EPs in spreadsheet:</p><ul>`;
+      for (const dup of duplicates) {
+        html += `<li>${dup}</li>`;
+      }
+      html += '</ul>';
+    }
+
+    // Find all EP-like patterns in PDF
+    const epPattern = /EP\d{7,9}/gi;
+    const epMatches = new Set((pdfText.match(epPattern) || []).map(ep => ep.toUpperCase()));
+    const unmatchedEPs = [...epMatches].filter(ep => !seen.has(ep));
+
+    if (unmatchedEPs.length > 0) {
+      html += `<p style="color: darkred; font-weight: bold;">📄 EPs found in application PDF but missing from spreadsheet:</p><ul>`;
+      for (const ep of unmatchedEPs) {
+        html += `<li>${ep}</li>`;
+      }
+      html += '</ul>';
+    }
+
+    epList.innerHTML = html;
   }
+
 
 
   document.getElementById('initials')?.addEventListener('input', () => {
