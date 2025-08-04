@@ -516,11 +516,27 @@ document.addEventListener('DOMContentLoaded', () => {
                   <th style="text-align: left; border-bottom: 1px solid #ccc;">Message</th>
                   <th style="text-align: left; border-bottom: 1px solid #ccc;">Date/Time</th>
                   <th style="text-align: left; border-bottom: 1px solid #ccc;">Request ID</th>
+                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Download Receipt</th>
+
                 </tr>
               </thead>
               <tbody></tbody>
             </table>
           `;
+          const downloadAllBtn = document.createElement('button');
+          downloadAllBtn.id = 'download-all-receipts';
+          downloadAllBtn.textContent = '⬇ Download All Receipts (.zip)';
+          downloadAllBtn.style.marginTop = '1rem';
+
+          const spinner = document.createElement('div');
+          spinner.id = 'zip-spinner';
+          spinner.textContent = '⏳ Zipping receipts...';
+          spinner.style.display = 'none';
+          spinner.style.marginTop = '0.5rem';
+
+          result.appendChild(downloadAllBtn);
+          result.appendChild(spinner);
+
         }
 
         const tableBody = document.querySelector('#results-table tbody');
@@ -534,8 +550,12 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${message}</td>
           <td>${now}</td>
           <td>${resJson.requestId || '—'}</td>
+          <td>
+            ${resJson.requestId ? `<button data-requestid="${resJson.requestId}" data-ep="${ep}" class="download-receipt-btn">📄 Download</button>` : '—'}
+          </td>
         `;
         tableBody.appendChild(row);
+
 
       } catch (e) {
         result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to connect</p>`;
@@ -656,5 +676,99 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  document.addEventListener('click', async e => {
+    if (e.target.classList.contains('download-receipt-btn')) {
+      e.target.disabled = true;
+      const originalText = e.target.textContent;
+      e.target.textContent = '⬇ Downloading...';
+
+      const requestId = e.target.getAttribute('data-requestid');
+      const ep = e.target.getAttribute('data-ep');
+      const initials = document.getElementById('initials').value.trim();
+
+      try {
+        if (!tokenData.access_token) throw new Error(tokenData.error || 'Missing access_token');
+
+        const pdfRes = await fetch(`https://upc-optout-backend.onrender.com/receipt?initials=${initials}&requestId=${requestId}&ep=${encodeURIComponent(ep)}`);
+
+        if (!pdfRes.ok) throw new Error('Receipt download failed');
+
+        const blob = await pdfRes.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Opt-Out Request Acknowledgement ${ep}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+      } catch (err) {
+        alert(`❌ Failed to download receipt: ${err.message}`);
+        console.error(err);
+      } finally {
+        e.target.disabled = false;
+        e.target.textContent = originalText;
+      }
+    }
+  });
+
+  document.getElementById('result')?.addEventListener('click', async e => {
+    if (e.target.id === 'download-all-receipts') {
+      const allButtons = [...document.querySelectorAll('.download-receipt-btn')];
+      const initials = document.getElementById('initials').value.trim();
+      const spinner = document.getElementById('zip-spinner');
+
+      if (!allButtons.length) return alert('No receipts to download.');
+
+      e.target.disabled = true;
+      spinner.style.display = 'block';
+
+      try {
+        const tokenRes = await fetch('https://upc-optout-backend.onrender.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initials })
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) throw new Error(tokenData.error || 'Missing access_token');
+
+        const zip = new JSZip();
+
+        for (const btn of allButtons) {
+          const ep = btn.getAttribute('data-ep');
+          const requestId = btn.getAttribute('data-requestid');
+
+          const pdfRes = await fetch(`https://upc-optout-backend.onrender.com/receipt?initials=${initials}&requestId=${requestId}&ep=${encodeURIComponent(ep)}`);
+
+
+          if (!pdfRes.ok) {
+            console.warn(`Skipping ${ep}: receipt not found`);
+            continue;
+          }
+
+          const blob = await pdfRes.blob();
+          zip.file(`Opt-Out Request Acknowledgement ${ep}.pdf`, blob);
+        }
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = 'upc_receipts.zip';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        alert(`❌ Failed to download all receipts: ${err.message}`);
+        console.error(err);
+      } finally {
+        e.target.disabled = false;
+        spinner.style.display = 'none';
+      }
+    }
+  });
+
 
 });
