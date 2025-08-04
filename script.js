@@ -550,8 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   <th style="text-align: left; border-bottom: 1px solid #ccc;">Message</th>
                   <th style="text-align: left; border-bottom: 1px solid #ccc;">Date/Time</th>
                   <th style="text-align: left; border-bottom: 1px solid #ccc;">Request ID</th>
-                  <th style="text-align: left; border-bottom: 1px solid #ccc;">Download Receipt</th>
-
                 </tr>
               </thead>
               <tbody></tbody>
