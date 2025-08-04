@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const tokenData = await tokenRes.json();
         if (!tokenData.access_token) throw new Error(tokenData.error || 'Missing access_token');
-        console.log('🔐 Token (live from sandbox):', tokenData.access_token);
+        console.log('🔐 Token :', tokenData.access_token);
       } catch (err) {
         console.error(`❌ Failed to retrieve token for ${ep}:`, err);
         result.innerHTML += `<p><strong>${ep}</strong>: ❌ Failed to get token</p>`;
@@ -769,6 +769,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  fetch('https://upc-optout-backend.onrender.com/mode')
+    .then(res => res.json())
+    .then(data => {
+      const box = document.getElementById('mode-indicator');
+      box.textContent = `${data.emoji} ${data.mode}`;
+      box.style.background = data.mode === 'LIVE' ? '#d1fae5' : '#fef3c7';  // green or amber
+      box.style.border = data.mode === 'LIVE' ? '2px solid #10b981' : '2px dashed #f59e0b';
+    });
+
 
 
 });
