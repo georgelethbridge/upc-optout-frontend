@@ -1,5 +1,31 @@
 // script.js
 
+window.onSignIn = async function (response) {
+  try {
+    const token = response.credential;
+
+    const res = await fetch('https://upc-optout-backend.onrender.com/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+
+    const data = await res.json();
+
+    if (!data.allowed) {
+      alert("⛔ You are not authorized.");
+      return;
+    }
+
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+
+  } catch (err) {
+    console.error("Google login failed", err);
+    alert("Login failed. Try again.");
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   let extractedEPs = [];
   let applicationPDF = null;
