@@ -609,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td>${now}</td>
           <td>${resJson.requestId || '—'}</td>
           <td>
-            ${resJson.requestId ? `<button data-requestid="${resJson.requestId}" data-ep="${ep}" class="download-receipt-btn">📄 Download</button>` : '—'}
+            <button class="view-registry-btn" data-ep="${ep}">🔎 View Opt-Out Search</button>
           </td>
         `;
         tableBody.appendChild(row);
@@ -736,41 +736,55 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', async e => {
-    if (e.target.classList.contains('download-receipt-btn')) {
-      e.target.disabled = true;
-      const originalText = e.target.textContent;
-      e.target.textContent = '⬇ Downloading...';
+    // if (e.target.classList.contains('download-receipt-btn')) {
+    //   e.target.disabled = true;
+    //   const originalText = e.target.textContent;
+    //   e.target.textContent = '⬇ Downloading...';
 
-      const requestId = e.target.getAttribute('data-requestid');
+    //   const requestId = e.target.getAttribute('data-requestid');
+    //   const ep = e.target.getAttribute('data-ep');
+    //   const initials = document.getElementById('initials').value.trim();
+
+    //   try {
+    //     if (!tokenData.access_token) throw new Error(tokenData.error || 'Missing access_token');
+
+    //     const pdfRes = await fetch(`https://upc-optout-backend.onrender.com/receipt?initials=${initials}&requestId=${requestId}&ep=${encodeURIComponent(ep)}`);
+
+    //     if (!pdfRes.ok) throw new Error('Receipt download failed');
+
+    //     const blob = await pdfRes.blob();
+    //     const url = window.URL.createObjectURL(blob);
+
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = `Opt-Out Request Acknowledgement ${ep}.pdf`;
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    //     window.URL.revokeObjectURL(url);
+
+    //   } catch (err) {
+    //     alert(`❌ Failed to download receipt: ${err.message}`);
+    //     console.error(err);
+    //   } finally {
+    //     e.target.disabled = false;
+    //     e.target.textContent = originalText;
+    //   }
+    // }
+    if (e.target.classList.contains('view-registry-btn')) {
       const ep = e.target.getAttribute('data-ep');
-      const initials = document.getElementById('initials').value.trim();
+      const url = `https://www.unifiedpatentcourt.org/en/registry/opt-out/results?case_type&patent_number=${encodeURIComponent(ep)}`;
 
-      try {
-        if (!tokenData.access_token) throw new Error(tokenData.error || 'Missing access_token');
-
-        const pdfRes = await fetch(`https://upc-optout-backend.onrender.com/receipt?initials=${initials}&requestId=${requestId}&ep=${encodeURIComponent(ep)}`);
-
-        if (!pdfRes.ok) throw new Error('Receipt download failed');
-
-        const blob = await pdfRes.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Opt-Out Request Acknowledgement ${ep}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-      } catch (err) {
-        alert(`❌ Failed to download receipt: ${err.message}`);
-        console.error(err);
-      } finally {
-        e.target.disabled = false;
-        e.target.textContent = originalText;
-      }
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener'; // security & prevents tab hijacking
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
     }
+
   });
 
   document.getElementById('result')?.addEventListener('click', async e => {
