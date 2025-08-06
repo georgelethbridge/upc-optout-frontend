@@ -789,11 +789,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('result')?.addEventListener('click', async e => {
     if (e.target.id === 'download-all-receipts') {
-      const allButtons = [...document.querySelectorAll('.download-receipt-btn')];
+      const tableRows = [...document.querySelectorAll('#results-table tbody tr')];
       const initials = document.getElementById('initials').value.trim();
       const spinner = document.getElementById('zip-spinner');
 
-      if (!allButtons.length) return alert('No receipts to download.');
+      if (!tableRows.length) return alert('No receipts to download.');
 
       e.target.disabled = true;
       spinner.style.display = 'block';
@@ -809,20 +809,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const zip = new JSZip();
 
-        for (const btn of allButtons) {
-          const ep = btn.getAttribute('data-ep');
-          const requestId = btn.getAttribute('data-requestid');
+        for (const row of tableRows) {
+          const ep = row.querySelector('td:nth-child(1)')?.textContent?.trim();
+            const requestId = row.querySelector('td:nth-child(4)')?.textContent?.trim();
+            if (!ep || !requestId || requestId === '—') continue;
 
-          const pdfRes = await fetch(`https://upc-optout-backend.onrender.com/receipt?initials=${initials}&requestId=${requestId}&ep=${encodeURIComponent(ep)}`);
+            const pdfRes = await fetch(`https://upc-optout-backend.onrender.com/receipt?initials=${initials}&requestId=${requestId}&ep=${encodeURIComponent(ep)}`);
 
+            if (!pdfRes.ok) {
+              console.warn(`Skipping ${ep}: receipt not found`);
+              continue;
+            }
 
-          if (!pdfRes.ok) {
-            console.warn(`Skipping ${ep}: receipt not found`);
-            continue;
-          }
-
-          const blob = await pdfRes.blob();
-          zip.file(`Opt-Out Request Acknowledgement ${ep}.pdf`, blob);
+            const blob = await pdfRes.blob();
+            zip.file(`Opt-Out Receipt ${ep}.pdf`, blob);
         }
 
         const content = await zip.generateAsync({ type: 'blob' });
