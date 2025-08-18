@@ -1,5 +1,6 @@
 // script.js — original-look version (uses your existing DOM ids)
 
+// put this at the top of script.js, replacing your current onSignIn
 window.onSignIn = async function (response) {
   try {
     const token = response.credential;
@@ -9,21 +10,40 @@ window.onSignIn = async function (response) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token })
     });
-
     const data = await res.json();
+
+    // helpful log – open DevTools console if needed
+    console.log('[auth] email:', data.email, 'allowed:', data.allowed);
+
     if (!data.allowed) {
-      alert("⛔ You are not authorized.");
+      alert(`⛔ This Google account (${data.email || 'unknown'}) is not allowed.`);
       return;
     }
 
-    // Show your original app container
-    document.getElementById('login-box').style.display = 'none';
-    document.getElementById('app-content').style.display = 'block';
+    // Hide the login box (support class or inline style)
+    const login = document.getElementById('login-box');
+    if (login) {
+      login.style.display = 'none';
+      login.classList.add('hidden');
+    }
+
+    // Show the app (try #app-content first, then #app)
+    const appRoot =
+      document.getElementById('app-content') ||
+      document.getElementById('app');
+
+    if (appRoot) {
+      appRoot.style.display = 'block';
+      appRoot.classList.remove('hidden');
+    } else {
+      console.warn('No app container found (#app-content or #app).');
+    }
   } catch (err) {
-    console.error("Google login failed", err);
-    alert("Login failed. Try again.");
+    console.error('Google login failed', err);
+    alert('Login failed. Try again.');
   }
 };
+
 
 document.addEventListener('DOMContentLoaded', () => {
   // ------------------------------------------------------------
