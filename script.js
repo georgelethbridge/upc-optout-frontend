@@ -311,32 +311,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = rows[headerRowIndex + 1]?.[nameIndex]?.trim() || '';
       const addressFull = rows[headerRowIndex + 1]?.[addrIndex]?.trim() || '';
       const email = rows[headerRowIndex + 1]?.[emailIndex]?.trim() || '';
-      const isNatural = document.getElementById('person-type').value === 'true';
 
       spinner.style.display = 'block';
 
       try {
-        const [addrRes, nameRes] = await Promise.all([
-          fetch('https://upc-optout-backend.onrender.com/parse-address', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ address: addressFull })
-          }).then(res => res.json()),
-          isNatural ? fetch('https://upc-optout-backend.onrender.com/parse-name', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name })
-          }).then(res => res.json()) : Promise.resolve(null)
-        ]);
+        const addrRes = await fetch('https://upc-optout-backend.onrender.com/parse-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: addressFull, name })
+        }).then(res => res.json());
+
+        const isNatural = !!addrRes.isNaturalPerson;
+        const naturalPersonDetails = isNatural ? (addrRes.naturalPersonDetails || null) : null;
+        const legalEntityDetails   = !isNatural ? (addrRes.legalEntityDetails || { name }) : null;
 
         const addressData = { ...addrRes, state: addrRes.country || addrRes.state || '' };
+
         applicantInfo = {
           isNaturalPerson: isNatural,
-          name,
-          address: addressData,
-          naturalPersonDetails: nameRes || undefined,
-          email: email || undefined
+          name: isNatural && naturalPersonDetails
+            ? `${naturalPersonDetails.firstName || ''} ${naturalPersonDetails.lastName || ''}`.trim()
+            : (legalEntityDetails?.name || name || ''),
+          naturalPersonDetails: naturalPersonDetails || undefined,
+          email: email || undefined,
+          address: addressData
         };
+
 
         if (epList) {
           epList.innerHTML = `<p>Found ${extractedEPs.length} EP numbers:</p>
@@ -659,6 +659,13 @@ document.addEventListener('DOMContentLoaded', () => {
         set('edit-zip', applicantInfo.address?.zipCode);
         set('edit-state', applicantInfo.address?.state);
         set('edit-email', applicantInfo.email);
+        // Prefill Applicant Type (if the dropdown exists) and toggle the name split fields
+        const typeSel = document.getElementById('edit-applicant-type');
+        if (typeSel) typeSel.value = String(!!applicantInfo.isNaturalPerson);
+
+        const split = document.getElementById('name-split-fields');
+        if (split) split.style.display = applicantInfo.isNaturalPerson ? 'block' : 'none';
+
         if (applicantInfo.isNaturalPerson) {
           document.getElementById('name-split-fields').style.display = 'block';
           set('edit-first', applicantInfo.naturalPersonDetails?.firstName);
@@ -675,6 +682,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    document.getElementById('edit-applicant-type')?.addEventListener('change', (e) => {
+      const split = document.getElementById('name-split-fields');
+      if (split) split.style.display = (e.target.value === 'true') ? 'block' : 'none';
+    });
+
+
     saveBtn.addEventListener('click', () => {
       const get = id => document.getElementById(id)?.value?.trim() || '';
       applicantInfo.name = get('edit-name');
@@ -685,6 +698,27 @@ document.addEventListener('DOMContentLoaded', () => {
         state: get('edit-state')
       };
       applicantInfo.email = get('edit-email');
+      // Save Applicant Type from the edit dropdown if present
+      const isNat = document.getElementById('edit-applicant-type')
+        ? (document.getElementById('edit-applicant-type').value === 'true')
+        : applicantInfo.isNaturalPerson; // fallback if dropdown not present
+
+      applicantInfo.isNaturalPerson = isNat;
+
+      if (isNat) {
+        applicantInfo.naturalPersonDetails = {
+          firstName: get('edit-first'),
+          lastName:  get('edit-last')
+        };
+        // Keep display name in sync for natural persons
+        const fn = applicantInfo.naturalPersonDetails.firstName;
+        const ln = applicantInfo.naturalPersonDetails.lastName;
+        const full = `${fn || ''} ${ln || ''}`.trim();
+        if (full) applicantInfo.name = full;
+      } else {
+        delete applicantInfo.naturalPersonDetails;
+      }
+
       if (applicantInfo.isNaturalPerson) {
         applicantInfo.naturalPersonDetails = {
           firstName: get('edit-first'),

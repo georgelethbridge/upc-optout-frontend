@@ -9,6 +9,8 @@
 </head>
 <body>
 
+  <h4>17:30</h4>
+
   <div id="mode-indicator" style="position: absolute; top: 10px; left: 10px; padding: 6px 12px; border-radius: 6px; font-weight: bold; background: #eee;"></div>
 
 
@@ -107,20 +109,18 @@
           </section>
 
           <section>
-            <label for="person-type">Applicant Type:</label>
-            <select id="person-type">
-              <option value="false">Legal Entity</option>
-              <option value="true">Natural Person</option>
-            </select>
-          </section>
-
-          <section>
             <label>Applicant Info (from spreadsheet):</label>
             <div id="spinner" style="display: none;">🔄 Parsing address via GPT...</div>
             <div id="applicant-summary" class="applicant-summary"></div>
             <button id="edit-applicant">Edit</button>
 
             <div id="applicant-edit-form" style="display:none; margin-top:1rem;">
+              <label>Applicant Type:
+                <select id="edit-applicant-type">
+                  <option value="true">Natural Person</option>
+                  <option value="false">Legal Entity</option>
+                </select>
+              </label>
               <label>Name: <input type="text" id="edit-name" /></label><br />
               <label>Address Line: <input type="text" id="edit-address" /></label><br />
               <label>City: <input type="text" id="edit-city" /></label><br />
