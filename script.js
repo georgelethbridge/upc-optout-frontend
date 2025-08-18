@@ -173,7 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
         internalReference: ep,
         applicant: {
           isNaturalPerson: applicantInfo.isNaturalPerson,
-          contactAddress: applicantInfo.address || {},
+          contactAddress: {
+            address: (applicantInfo.address?.address || ''),
+            zipCode: (applicantInfo.address?.zipCode || ''),
+            city:    (applicantInfo.address?.city || ''),
+            state:   (applicantInfo.address?.state || '')
+          },
+
           ...(applicantInfo.isNaturalPerson ? { naturalPersonDetails: applicantInfo.naturalPersonDetails } : { legalEntityDetails: { name: applicantInfo.name } }),
           ...(applicantInfo.email ? { email: applicantInfo.email } : {})
         },
@@ -325,7 +331,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const naturalPersonDetails = isNatural ? (addrRes.naturalPersonDetails || null) : null;
         const legalEntityDetails   = !isNatural ? (addrRes.legalEntityDetails || { name }) : null;
 
-        const addressData = { ...addrRes, state: addrRes.country || addrRes.state || '' };
+        const addressData = {
+          address: addrRes.address || '',
+          city:    addrRes.city || '',
+          zipCode: addrRes.zipCode || '',
+          state:   addrRes.state || addrRes.country || ''
+        };
+
 
         applicantInfo = {
           isNaturalPerson: isNatural,
