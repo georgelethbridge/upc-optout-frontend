@@ -501,10 +501,11 @@ document.addEventListener('DOMContentLoaded', () => {
       formData.append('applicant', JSON.stringify({
         isNaturalPerson: applicantInfo.isNaturalPerson,
         contactAddress: applicantInfo.address,
-        email: applicantInfo.email,
+        ...(applicantInfo.email ? { email: applicantInfo.email } : {}),
         naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
         legalEntityDetails: !applicantInfo.isNaturalPerson ? { name: applicantInfo.name } : undefined
       }));
+
       if (mandator) formData.append('mandator', JSON.stringify(mandator));
       formData.append('application_pdf', applicationPDF);
       if (mandatePDF) formData.append('mandate_pdf', mandatePDF);
@@ -534,10 +535,11 @@ document.addEventListener('DOMContentLoaded', () => {
           applicant: {
             isNaturalPerson: applicantInfo.isNaturalPerson,
             contactAddress: applicantInfo.address,
-            email: applicantInfo.email,
+            ...(applicantInfo.email ? { email: applicantInfo.email } : {}),
             naturalPersonDetails: applicantInfo.isNaturalPerson ? applicantInfo.naturalPersonDetails : undefined,
             legalEntityDetails: !applicantInfo.isNaturalPerson ? { name: applicantInfo.name } : undefined
           },
+
           patent: { patentNumber: ep },
           documents: [{
             documentType: 'Application',
